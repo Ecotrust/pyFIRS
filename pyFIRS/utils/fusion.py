@@ -1,44 +1,22 @@
-# Wrappers for subprocess calls for FUSION command line tools
-import warnings
+import os
+import subprocess
+import platform
+import warning
+from .formatters import listlike, format_fusion_kws, format_fusion_args
 
-# helper functions for formatting command line arguments
-def listlike(arg):
-    '''Checks whether an argument is list-like, returns boolean'''
-    return not hasattr(arg, "strip") and (hasattr(arg, "__getitem__") or
-            hasattr(arg, "__iter__"))
-
-def format_fusion_kws(arg):
-    '''Formats keyword arguments for FUSION command line usage'''
-    if isinstance(arg, bool):
-        return ''
-    elif listlike(arg):
-        return ':'+",".join(str(x) for x in arg)
-    else:
-        return ':' + str(arg)
-
-def format_fusion_args(arg):
-    '''Formats positional arguments for FUSION command line usage'''
-    if listlike(arg):
-        return " ".join(str(x) for x in arg)
-    else:
-        return str(arg)
-
-# wrappers for FUSION command line tools
+# Pythonic wrappers for FUSION command line tools
 class useFUSION(object):
     "A class for executing FUSION functions as methods"
-    os = __import__('os')
-    subprocess = __import__('subprocess')
-    platform = __import__('platform')
 
     def __init__(self,src='C:/FUSION'):
         "Initialize with a path to the FUSION executables"
         self.src = src
-        self.system = self.platform.system()
+        self.system = platform.system()
 
     def run(self, cmd, *params, **kwargs):
         "Formats and executes a FUSION command line call using subprocess"
         # prepend the path to FUSION tools to the user-specified command
-        cmd = self.os.path.join(self.src, cmd)
+        cmd = os.path.join(self.src, cmd)
         # format kwargs as FUSION 'switches'
         switches = ['/{}{}'.format(key, format_fusion_kws(value)) for (key, value)
                     in kwargs.items() if value]
@@ -52,18 +30,18 @@ class useFUSION(object):
         else:
             echo = False
 
-        cmd = self.os.path.join(self.src, cmd)
+        cmd = os.path.join(self.src, cmd)
 
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
             # (this requires WINE to be installed)
-            proc = self.subprocess.run(['wine', cmd, *switches, *params],
-                                       stderr = self.subprocess.PIPE,
-                                       stdout = self.subprocess.PIPE)
+            proc = subprocess.run(['wine', cmd, *switches, *params],
+                                       stderr = subprocess.PIPE,
+                                       stdout = subprocess.PIPE)
         else:
-            proc = self.subprocess.run([cmd, *switches, *params],
-                                       stderr = self.subprocess.PIPE,
-                                       stdout = self.subprocess.PIPE)
+            proc = subprocess.run([cmd, *switches, *params],
+                                       stderr = subprocess.PIPE,
+                                       stdout = subprocess.PIPE)
 
         if echo:
             print(proc.stdout.decode())
