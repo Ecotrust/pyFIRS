@@ -71,4 +71,4 @@ dist
 # Things specific to this project #
 ###################################
 examples/.ipynb_checkpoints
-pyFIRS.egg_info
+pyFIRS.egg_info/*
