@@ -2,7 +2,6 @@
 import os
 import subprocess
 
-
 def get_bounds(lasinfo):
     '''Parses the minimum and maximum X, Y, and Z values from LASinfo output.
 
@@ -356,5 +355,3 @@ class useLAStools(object):
         "http://www.cs.unc.edu/~isenburg/laszip/download/lasindex_README.txt"
         cmd = 'lasindex'
         return self.run(cmd, **kwargs)
-
------------------------------

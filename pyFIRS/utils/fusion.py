@@ -16,7 +16,7 @@ def format_fusion_kws(arg):
     else:
         return ':' + str(arg)
 
-def format_args(arg):
+def format_fusion_args(arg):
     '''Formats positional arguments for FUSION command line usage'''
     if listlike(arg):
         return " ".join(str(x) for x in arg)
@@ -28,10 +28,12 @@ class useFUSION(object):
     "A class for executing FUSION functions as methods"
     os = __import__('os')
     subprocess = __import__('subprocess')
+    platform = __import__('platform')
 
-    def __init__(self,src):
+    def __init__(self,src='C:/FUSION'):
         "Initialize with a path to the FUSION executables"
         self.src = src
+        self.system = self.platform.system()
 
     def run(self, cmd, *params, **kwargs):
         "Formats and executes a FUSION command line call using subprocess"
@@ -41,15 +43,33 @@ class useFUSION(object):
         switches = ['/{}{}'.format(key, format_fusion_kws(value)) for (key, value)
                     in kwargs.items() if value]
         # format the required parameters for each function as strings
-        params = [format_args(param) for param in params]
+        params = [format_fusion_args(param) for param in params]
 
-        # execute the command using subprocess, capturing stderr and stdout
-        # output can be silenced using the 'quiet' arg in a FUSION command
-        proc = self.subprocess.run([cmd, *switches, *params],
-                                   stderr = self.subprocess.PIPE,
-                                   stdout = self.subprocess.PIPE)
-        print(proc.stdout.decode())
-        print(proc.stderr.decode())
+        # check to see if echo has been requested
+        if ('-echo ','') in switches:
+            echo = True
+            switches.remove(('-echo ', ''))
+        else:
+            echo = False
+
+        cmd = self.os.path.join(self.src, cmd)
+
+        if self.system == 'Linux':
+            # if we're on a linux system, execute the commands using WINE
+            # (this requires WINE to be installed)
+            proc = self.subprocess.run(['wine', cmd, *switches, *params],
+                                       stderr = self.subprocess.PIPE,
+                                       stdout = self.subprocess.PIPE)
+        else:
+            proc = self.subprocess.run([cmd, *switches, *params],
+                                       stderr = self.subprocess.PIPE,
+                                       stdout = self.subprocess.PIPE)
+
+        if echo:
+            print(proc.stdout.decode())
+            print(proc.stderr.decode())
+
+        return proc
 
     def ascii2dtm(self, surfacefile, xyunits, zunits, coordsys, zone,
                   horizdatum, vertdatum, gridfile, **kwargs):
