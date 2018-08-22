@@ -61,6 +61,7 @@ doc/_build
 dist
 # Egg metadata
 *.egg-info
+*.egg-info/
 # other temporary files
 .coverage
 .deps
@@ -70,3 +71,4 @@ dist
 # Things specific to this project #
 ###################################
 examples/.ipynb_checkpoints
+pyFIRS.egg_info
