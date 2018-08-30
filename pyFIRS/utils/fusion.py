@@ -1,7 +1,7 @@
 import os
 import subprocess
 import platform
-import warning
+import warnings
 from .formatters import listlike, format_fusion_kws, format_fusion_args
 
 # Pythonic wrappers for FUSION command line tools
@@ -18,15 +18,15 @@ class useFUSION(object):
         # prepend the path to FUSION tools to the user-specified command
         cmd = os.path.join(self.src, cmd)
         # format kwargs as FUSION 'switches'
-        switches = ['/{}{}'.format(key, format_fusion_kws(value)) for (key, value)
-                    in kwargs.items() if value]
+        switches = format_fusion_kws(**kwargs)
+
         # format the required parameters for each function as strings
         params = [format_fusion_args(param) for param in params]
 
-        # check to see if echo has been requested
-        if ('-echo ','') in switches:
+        # check to see if echo was requested
+        if 'echo' in kwargs:
             echo = True
-            switches.remove(('-echo ', ''))
+            del kwargs['echo']
         else:
             echo = False
 
