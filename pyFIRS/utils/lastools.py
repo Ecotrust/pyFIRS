@@ -6,6 +6,7 @@ import urllib.request
 import geopandas as gpd
 import shutil
 import ipyparallel as ipp
+import numpy as np
 
 class LAStools_base(object):
     "A class for executing LAStools functions as methods"
@@ -262,8 +263,8 @@ class useLAStools(LAStools_base):
     these lower-level commands and which may integrate some Python processing.
     """
 
-    def pitfree(self, lasfile, outdir, resolution=0.33333, splat_radius=0.1,
-                max_TIN_edge=1.0, cleanup=True):
+    def pitfree(self, lasfile, outdir, units, xy_res=None, z_res=None,
+                      splat_radius=None, max_TIN_edge=None, cleanup=True):
         '''Creates a pit-free Canopy Height Model from a lidar point cloud.
 
         This function chains together several LAStools command line tools to
@@ -285,23 +286,33 @@ class useLAStools(LAStools_base):
         LiDAR". The default values used here are drawn from this blog post:
         https://rapidlasso.com/2014/11/04/rasterizing-perfect-canopy-height-models-from-lidar/
 
+        The method employed here varies from the blog post by using blast2dem to
+        allow out-of-core processing of larger point clouds to avoid running out
+        of memory when calculating intermediate DEMs.
+
         Parameters
         ----------
         lasfile: string, path to file (required)
             Lidar point cloud input file to process.
         outdir: string, path to directory (required)
             Output directory where pit free CHM will be saved
-        resolution: numeric (optional)
+        units: string (required)
+            'm' for meters or 'ft' for feet
+        xy_res: numeric (optional)
             Size of grid cells for Canopy Height Model, in same units as lidar
-            data. Used in the `step` argument of las2dem. Default is 0.33333.
+            data. Used in the `step` argument of las2dem. Default is 0.33333 if
+            units are in meters or 1.0 if units are in feet.
+        z_res: numeric (optional)
+            Height of vertical slices used to build CHM layers. Will always use
+            layers from 0-2m and 2-5m, then will stack on layers z_res thick.
         splat_radius: numeric (optional)
             Distance by which lidar points will be replicated in each of eight
             directions, which used in the `subcircle` argument of lasthin.
-            Default is 0.1.
+            Default is 0.1 if units are in meters or 0.3 if units are in feet.
         max_TIN_edge: numeric (optional)
             Maximum length of edges for points to remain connected in TIN
             created by las2dem. Used in the `kill` argument of las2dem. Default
-            is 1.0.
+            is 1.0 if units are in meters or 3.0 if units are in feet.
         cleanup: boolean (optional)
             Whether or not to remove the temporary working directory and
             intermediate files produced. Defaults to True.
@@ -311,7 +322,7 @@ class useLAStools(LAStools_base):
         basename = fname.split('.')[0]
 
         # make a temporary working directory
-        tmpdir = os.path.join(path, 'tmp_{}'.format(basename))
+        tmpdir = os.path.join(path, 'chm_tmp_{}'.format(basename))
         os.makedirs(tmpdir, exist_ok=True)
 
         # run lasheight to normalize point cloud
@@ -321,15 +332,39 @@ class useLAStools(LAStools_base):
                        olaz=True,
                        replace_z=True,
                        keep_class=(1,2,5),
-                       drop_above=100, # drop points more than 100m above ground
                        drop_below=-0.1) # drop points below the ground
 
         # get the minimum and maximum normalized heights
         # we'll use these later for creating layered canopy height models
         infile = os.path.join(tmpdir,'normalized','*.laz')
-        proc = self.lasinfo(i=infile)
-        lasinfo = proc.stderr.decode()
+        info_proc = self.lasinfo(i=infile)
+        lasinfo = info_proc.stderr.decode()
         _, _, zmin, _, _, zmax = get_bounds(lasinfo)
+
+        # check to see if we need to use defaults
+        if units.lower() in ('m', 'meter', 'meters'):
+            if not xy_res:
+                xy_res = 0.33333
+            if not z_res:
+                z_res = 5.0
+            if not splat_radius:
+                splat_radius = 0.1
+            if not max_TIN_edge:
+                max_TIN_edge = 1.0
+            hts = [0.0,2.0] + [x for x in np.arange(5.0,zmax,z_res)]
+        elif units.lower() in ('f', 'ft', 'feet'):
+            if not xy_res:
+                xy_res = 1.0
+            if not z_res:
+                z_res = 15.0
+            if not splat_radius:
+                splat_radius = 0.3
+            if not max_TIN_edge:
+                max_TIN_edge = 3.0
+            hts = [0.0, 6.56168] + [x for x in np.arange(16.4042,zmax,z_res).tolist()]
+        else:
+            raise ValueError('{} is not recognized units'.format(units))
+
 
         # create DEM of ground for minimum value of pitfree CHM
         infile = os.path.join(tmpdir, 'normalized', '*.laz') # *_height.laz
@@ -340,7 +375,7 @@ class useLAStools(LAStools_base):
                        odix=odix,
                        obil=True,
                        drop_z_above=0.1,
-                       step=resolution,  # resolution of ground model
+                       step=xy_res,  # resolution of ground model
                        use_tile_bb=True)#,
                        #extra_pass=True)
 
@@ -353,7 +388,7 @@ class useLAStools(LAStools_base):
                      olaz=True,
                      highest=True,
                      subcircle=splat_radius,
-                     step=resolution/2.0)
+                     step=xy_res/2.0)
 
         # using the "splatted" lidar point cloud, generate CHM layers above
         # ground, above 2m, and then in 5m increments up to zmax...
@@ -361,9 +396,9 @@ class useLAStools(LAStools_base):
         infile = os.path.join(tmpdir, 'splatted', '*.laz')
 
         # loop through the layers
-        hts = [0,2] + [x for x in range(5,int(zmax),5)]
-        for ht in hts:
-            odix = '_chm_{0:03d}'.format(ht)
+        dem2_procs = []
+        for i, ht in enumerate(hts):
+            odix = '_chm_{:02d}_{:03d}'.format(i, int(ht))
             odir = os.path.join(tmpdir, 'chm_layers')
             proc_dem2 = self.blast2dem(i=infile,
                            odir=odir,
@@ -371,24 +406,25 @@ class useLAStools(LAStools_base):
                            obil=True,
                            drop_z_below=ht, # specify layer height from ground
                            kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
-                           step=resolution,  # resolution of layer DEM
+                           step=xy_res,  # resolution of layer DEM
                            use_tile_bb=True)#, # trim tile buffer
                            #extra_pass=True)
+            dem2_procs.append(proc_dem2)
 
         # merge the CHM layers into a single pit free CHM GeoTiff
         infiles = os.path.join(tmpdir, 'chm_layers', '*.bil')
-        outfile = basename + '_chm_pitsfree.tif'
+        outfile = basename + '_chm_pitfree.tif'
         proc_grid = self.lasgrid(i=infiles,
                      merged=True,
                      o=outfile,
                      odir=outdir,
                      highest=True,
-                     step=resolution)  # resolution of pit-free CHM
+                     step=xy_res)  # resolution of pit-free CHM
 
         if cleanup:
             shutil.rmtree(tmpdir)
 
-        return (proc_height, proc_dem1, proc_thin, proc_dem2, proc_grid)
+        return (proc_height, proc_dem1, proc_thin, dem2_procs, proc_grid)
 
 def clean_tile(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None):
     """Removes polygons within the buffer zone of a tile.
