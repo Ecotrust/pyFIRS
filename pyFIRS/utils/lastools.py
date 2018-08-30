@@ -2,6 +2,229 @@ import os
 import subprocess
 import platform
 from .formatters import listlike, format_lastools_kws
+import urllib.request
+import geopandas as gpd
+import shutil
+import ipyparallel as ipp
+
+class LAStools_base(object):
+    "A class for executing LAStools functions as methods"
+
+    def __init__(self,src='C:/lastools/bin'):
+        "Initialize with a path to the LAStools executables"
+        self.src = src
+        self.system = platform.system()
+
+        # retrieve the documentation for each LAStool from the web
+        tools = [self.lasview.__func__, self.lasinfo.__func__,
+                 self.lasground.__func__, self.lasclassify.__func__,
+                 self.las2dem.__func__, self.las2iso.__func__,
+                 self.lascolor.__func__, self.lasgrid.__func__,
+                 self.lasoverlap.__func__, self.lasoverage.__func__,
+                 self.lasboundary.__func__, self.lasclip.__func__,
+                 self.lasheight.__func__, self.lastrack.__func__,
+                 self.lascanopy.__func__, self.lasthin.__func__,
+                 self.lassort.__func__, self.lasduplicate.__func__,
+                 self.lascontrol.__func__, self.lastile.__func__,
+                 self.lassplit.__func__, self.txt2las.__func__,
+                 self.las2dem.__func__, self.las2iso.__func__,
+                 self.las2las.__func__, self.las2shp.__func__,
+                 self.las2tin.__func__, self.lasvoxel.__func__,
+                 self.lasreturn.__func__, self.laszip.__func__,
+                 self.lasindex.__func__]
+
+        for tool in tools:
+            name = tool.__name__
+            URL = "http://www.cs.unc.edu/~isenburg/laszip/download/{}_README.txt".format(name)
+            try:
+                docstring = urllib.request.urlopen(URL).read().decode('utf-8', 'ignore')
+            except:
+                print('Error retrieving docstring for {}'.format(name))
+                docstring = URL
+            setattr(tool, '__doc__', docstring)
+
+    def run(self, cmd, **kwargs):
+        """Executes a LAStools command line tool.
+
+        Formats kwargs provided in Pythonic format into the format expected
+        by LAStools command line tools and executes the command line tool using
+        the subprocess module.
+
+        Parameters
+        ----------
+        cmd: string
+            name of LAStools command line tool
+        input: string, path to file(s)
+            path to files to process with command line tool
+
+        Returns
+        -------
+        CompletedProcess, a class from the subprocess module that includes
+        attributes such as args, stdout, stderr, and returncode.
+        """
+        # check to see if echo was requested
+        if 'echo' in kwargs:
+            echo = kwargs['echo']
+            del kwargs['echo']
+        else:
+            echo = False
+
+        # check to see if output directory exists, if not, make it
+        if 'odir' in kwargs:
+            path = kwargs['odir']
+            # makedirs will create whole directory tree recursively if needed
+            os.makedirs(path, exist_ok=True)
+
+        # format the kwargs
+        kws = format_lastools_kws(**kwargs)
+
+        # format the command to include the path to executables
+        cmd = os.path.join(self.src, cmd)
+
+        if self.system == 'Linux':
+            # if we're on a linux system, execute the commands using WINE
+            # (this requires WINE to be installed)
+            proc = subprocess.run(['wine', cmd, *kws],
+                                       stderr = subprocess.PIPE,
+                                       stdout = subprocess.PIPE)
+        else:
+            proc = subprocess.run([cmd, *kws],
+                                       stderr = subprocess.PIPE,
+                                       stdout = subprocess.PIPE)
+        if echo:
+            print(proc.stdout.decode())
+            print(proc.stderr.decode())
+
+        return proc
+
+    def lasview(self, **kwargs):
+        cmd = 'lasview'
+        return self.run(cmd, **kwargs)
+
+    def lasinfo(self, **kwargs):
+        cmd = 'lasinfo'
+        return self.run(cmd, **kwargs)
+
+    def lasground(self, **kwargs):
+        cmd = 'lasground'
+        return self.run(cmd, **kwargs)
+
+    def lasnoise(self, **kwargs):
+        cmd = 'lasnoise'
+        return self.run(cmd, **kwargs)
+
+    def lasclassify(self, **kwargs):
+        cmd = 'lasclassify'
+        return self.run(cmd, **kwargs)
+
+    def las2dem(self, **kwargs):
+        cmd = 'las2dem'
+        return self.run(cmd, **kwargs)
+
+    def las2iso(self, **kwargs):
+        cmd = 'las2iso'
+        return self.run(cmd, **kwargs)
+
+    def lascolor(self, **kwargs):
+        cmd = 'lascolor'
+        return self.run(cmd, **kwargs)
+
+    def lasgrid(self, **kwargs):
+        cmd = 'lasgrid'
+        return self.run(cmd, **kwargs)
+
+    def lasoverlap(self, **kwargs):
+        cmd = 'lasoverlap'
+        return self.run(cmd, **kwargs)
+
+    def lasoverage(self, **kwargs):
+        cmd = 'lasoverage'
+        return self.run(cmd, **kwargs)
+
+    def lasboundary(self, **kwargs):
+        cmd = 'lasboundary'
+        return self.run(cmd, **kwargs)
+
+    def lasclip(self, **kwargs):
+        cmd = 'lasclip'
+        return self.run(cmd, **kwargs)
+
+    def lasheight(self, **kwargs):
+        cmd = 'lasheight'
+        return self.run(cmd, **kwargs)
+
+    def lastrack(self, **kwargs):
+        cmd = 'lastrack'
+        return self.run(cmd, **kwargs)
+
+    def lascanopy(self, **kwargs):
+        cmd = 'lascanopy'
+        return self.run(cmd, **kwargs)
+
+    def lasthin(self, **kwargs):
+        cmd = 'lasthin'
+        return self.run(cmd, **kwargs)
+
+    def lassort(self, **kwargs):
+        cmd = 'lassort'
+        return self.run(cmd, **kwargs)
+
+    def lasduplicate(self, **kwargs):
+        cmd = 'lasduplicate'
+        return self.run(cmd, **kwargs)
+
+    def lascontrol(self, **kwargs):
+        cmd = 'lascontrol'
+        return self.run(cmd, **kwargs)
+
+    def lastile(self, **kwargs):
+        cmd = 'lastile'
+        return self.run(cmd, **kwargs)
+
+    def lassplit(self, **kwargs):
+        cmd = 'lassplit'
+        return self.run(cmd, **kwargs)
+
+    def txt2las(self, **kwargs):
+        cmd = 'txt2las'
+        return self.run(cmd, **kwargs)
+
+    def blast2dem(self, **kwargs):
+        cmd = 'blast2dem'
+        return self.run(cmd, **kwargs)
+
+    def blast2iso(self, **kwargs):
+        cmd = 'blast2iso'
+        return self.run(cmd, **kwargs)
+
+    def las2las(self, **kwargs):
+        cmd = 'las2las'
+        return self.run(cmd, **kwargs)
+
+    def las2shp(self, **kwargs):
+        cmd = 'las2shp'
+        return self.run(cmd, **kwargs)
+
+    def las2tin(self, **kwargs):
+        cmd = 'las2shp'
+        return self.run(cmd, **kwargs)
+
+    def lasvoxel(self, **kwargs):
+        cmd = 'lasvoxel'
+        return self.run(cmd, **kwargs)
+
+    def lasreturn(self, **kwargs):
+        cmd = 'lasreturn'
+        return self.run(cmd, **kwargs)
+
+    def laszip(self, **kwargs):
+        cmd = 'laszip'
+        return self.run(cmd, **kwargs)
+
+    def lasindex(self, **kwargs):
+        cmd = 'lasindex'
+        return self.run(cmd, **kwargs)
+
 
 # Pythonic wrappers for LAStools command line tools
 def get_bounds(lasinfo):
@@ -33,62 +256,13 @@ def get_bounds(lasinfo):
     maxs = (float(max_vals[0]), float(max_vals[1]), float(max_vals[2]))
     return mins + maxs
 
-class useLAStools(object):
-    "A class for executing LAStools functions as methods"
+class useLAStools(LAStools_base):
+    """A class which inherits the command-line tools from LAStools_base and
+    provides additional methods for processing lidar data that chain together
+    these lower-level commands and which may integrate some Python processing.
+    """
 
-    def __init__(self,src='C:/lastools/bin'):
-        "Initialize with a path to the LAStools executables"
-        self.src = src
-        self.system = platform.system()
-
-    def test_run(self, input):
-        print(str(input))
-
-    def run(self, cmd, **kwargs):
-        """Executes a LAStools command line tool.
-
-        Formats kwargs provided in Pythonic format into the format expected
-        by LAStools command line tools and executes the command line tool using
-        the subprocess module.
-
-        Parameters
-        ----------
-        cmd: string
-            name of LAStools commandline tool
-
-        Returns
-        -------
-        CompletedProcess, a class from the subprocess module that includes
-        attributes such as args, stdout, stderr, and returncode.
-        """
-        kws = [('-{} '.format(key), format_lastools_kws(value)) for (key, value) in kwargs.items()]
-
-        # check to see if echo has been requested
-        if ('-echo ','') in kws:
-            echo = True
-            kws.remove(('-echo ', ''))
-        else:
-            echo = False
-
-        cmd = os.path.join(self.src, cmd)
-
-        if self.system == 'Linux':
-            # if we're on a linux system, execute the commands using WINE
-            # (this requires WINE to be installed)
-            proc = subprocess.run(['wine', cmd, *kws],
-                                       stderr = subprocess.PIPE,
-                                       stdout = subprocess.PIPE)
-        else:
-            proc = subprocess.run([cmd, *kws],
-                                       stderr = subprocess.PIPE,
-                                       stdout = subprocess.PIPE)
-        if echo:
-            print(proc.stdout.decode())
-            print(proc.stderr.decode())
-
-        return proc
-
-    def pitfree(self, lasfile, resolution=0.33333, splat_radius=0.1,
+    def pitfree(self, lasfile, outdir, resolution=0.33333, splat_radius=0.1,
                 max_TIN_edge=1.0, cleanup=True):
         '''Creates a pit-free Canopy Height Model from a lidar point cloud.
 
@@ -115,6 +289,8 @@ class useLAStools(object):
         ----------
         lasfile: string, path to file (required)
             Lidar point cloud input file to process.
+        outdir: string, path to directory (required)
+            Output directory where pit free CHM will be saved
         resolution: numeric (optional)
             Size of grid cells for Canopy Height Model, in same units as lidar
             data. Used in the `step` argument of las2dem. Default is 0.33333.
@@ -131,213 +307,133 @@ class useLAStools(object):
             intermediate files produced. Defaults to True.
         '''
         path_to_file = os.path.abspath(lasfile)
-        path, file = os.path.split(path_to_file)
-        basename = file.split('.')[0]
+        path, fname = os.path.split(path_to_file)
+        basename = fname.split('.')[0]
 
         # make a temporary working directory
         tmpdir = os.path.join(path, 'tmp_{}'.format(basename))
-        os.mkdir(tmpdir)
+        os.makedirs(tmpdir, exist_ok=True)
 
         # run lasheight to normalize point cloud
-        suffix = '_normalized'
-        outfile = os.path.join(tmpdir, basename + suffix + '.laz')
-        self.lasheight(i=path_to_las, o=outfile, replace_z=True)
+        odir = os.path.join(tmpdir, 'normalized')
+        proc_height = self.lasheight(i=path_to_file,
+                       odir=odir,
+                       olaz=True,
+                       replace_z=True,
+                       keep_class=(1,2,5),
+                       drop_above=100, # drop points more than 100m above ground
+                       drop_below=-0.1) # drop points below the ground
 
         # get the minimum and maximum normalized heights
         # we'll use these later for creating layered canopy height models
-        proc = self.lasinfo(i=outfile)
+        infile = os.path.join(tmpdir,'normalized','*.laz')
+        proc = self.lasinfo(i=infile)
         lasinfo = proc.stderr.decode()
         _, _, zmin, _, _, zmax = get_bounds(lasinfo)
 
         # create DEM of ground for minimum value of pitfree CHM
-        infile = os.path.join(tmpdir, basename + suffix + '.laz') # *_height.laz
-        suffix = '_chm_ground'
-        outfile = os.path.join(tmpdir, basename + suffix + '.bil')
-        self.las2dem(i=infile, o=outfile, drop_z_above=0.1,
-                    step=resolution) # resolution of ground model
+        infile = os.path.join(tmpdir, 'normalized', '*.laz') # *_height.laz
+        odir = os.path.join(tmpdir, 'chm_layers')
+        odix = '_chm_ground'
+        proc_dem1 = self.blast2dem(i=infile,
+                       odir=odir,
+                       odix=odix,
+                       obil=True,
+                       drop_z_above=0.1,
+                       step=resolution,  # resolution of ground model
+                       use_tile_bb=True)#,
+                       #extra_pass=True)
 
         # "splat" and thin the lidar point cloud to get highest points using a
         # finer resolution than our final CHM will be
-        suffix = '_temp'
-        outfile = os.path.join(tmpdir, basename + suffix + '.laz')
-        self.lasthin(i=infile, o=outfile, highest=True,
-                    subcircle=splat_radius,
-                    step=resolution/2.0)
+        infile = os.path.join(tmpdir, 'normalized', '*.laz') # *_height.laz
+        odir = os.path.join(tmpdir, 'splatted')
+        proc_thin = self.lasthin(i=infile,
+                     odir=odir,
+                     olaz=True,
+                     highest=True,
+                     subcircle=splat_radius,
+                     step=resolution/2.0)
 
-        # generate CHM layers above ground, above 2m, and then in 5m increments
-        # up to zmax... las2dem first makes a TIN and then rasterizes to grid
-        hts = [0,2] + [x for x in range(5,int(zmax),5)]
-        infile = os.path.join(tmpdir, basename + suffix + '.laz')
+        # using the "splatted" lidar point cloud, generate CHM layers above
+        # ground, above 2m, and then in 5m increments up to zmax...
+        # las2dem first makes a TIN and then rasterizes to grid
+        infile = os.path.join(tmpdir, 'splatted', '*.laz')
+
         # loop through the layers
+        hts = [0,2] + [x for x in range(5,int(zmax),5)]
         for ht in hts:
-            suffix = '_chm{0:03d}'.format(ht)
-            outfile = os.path.join(tmpdir, basename + suffix + '.bil')
-            self.las2dem(i=infile, o=outfile,
-                        drop_z_below=ht, # specify layer height from ground
-                        kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
-                        step=resolution) # resolution of layer DEM
+            odix = '_chm_{0:03d}'.format(ht)
+            odir = os.path.join(tmpdir, 'chm_layers')
+            proc_dem2 = self.blast2dem(i=infile,
+                           odir=odir,
+                           odix=odix,
+                           obil=True,
+                           drop_z_below=ht, # specify layer height from ground
+                           kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
+                           step=resolution,  # resolution of layer DEM
+                           use_tile_bb=True)#, # trim tile buffer
+                           #extra_pass=True)
 
-        # merge the CHM layers into a GeoTiff
-        infiles = os.path.join(tmpdir,'*.bil')
-        suffix = '_chm_pitfree'
-        outfile = os.path.join(path, basename + suffix + '.tif')
-        self.lasgrid(i=infiles, merged=True, o=outfile, highest=True,
-                    step=resolution) # resolution of pit-free CHM
+        # merge the CHM layers into a single pit free CHM GeoTiff
+        infiles = os.path.join(tmpdir, 'chm_layers', '*.bil')
+        outfile = basename + '_chm_pitsfree.tif'
+        proc_grid = self.lasgrid(i=infiles,
+                     merged=True,
+                     o=outfile,
+                     odir=outdir,
+                     highest=True,
+                     step=resolution)  # resolution of pit-free CHM
 
         if cleanup:
             shutil.rmtree(tmpdir)
 
-    def lasview(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasview_README.txt"
-        cmd = 'lasview'
-        return self.run(cmd, **kwargs)
+        return (proc_height, proc_dem1, proc_thin, proc_dem2, proc_grid)
 
-    def lasinfo(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasinfo_README.txt"
-        cmd = 'lasinfo'
-        return self.run(cmd, **kwargs)
+def clean_tile(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None):
+    """Removes polygons within the buffer zone of a tile.
 
-    def lasground(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasground_README.txt"
-        cmd = 'lasground'
-        return self.run(cmd, **kwargs)
+    This function removes polygons from a shapefile that fall in the buffered
+    area of point cloud tile. When building footprints or tree crowns (for
+    example) are delineated from a point cloud, a buffer around the tile is
+    generally be used to avoid edge effects. This tool computes the centroid of
+    each polygon and determines whether it falls within the bounds of the
+    unbuffered tile. It outputs a new shapefile containing only those polygons
+    whose centroids fall within the unbuffered tile.
 
-    def lasclassify(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasclassify_README.txt"
-        cmd = 'lasclassify'
-        return self.run(cmd, **kwargs)
+    The polygons may be simplified using optional arguments simp_tol and
+    simp_topol to reduce the number of points that define their boundaries.
 
-    def las2dem(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/las2dem_README.txt"
-        cmd = 'las2dem'
-        return self.run(cmd, **kwargs)
+    Parameters
+    ----------
+    polygons_shp: string, path to shapefile (required)
+        A shapefile containing the polygons delineated within a buffered tile.
+    tile_shp: string, path to shapefile (required)
+        A shapefile containing the bounds of the tile WITHOUT buffers
+    odir: string, path to directory (required)
+        Path to the output directory for the new shapefile
+    simp_tol = numeric,
+        Tolerance level for simplification. All points within a simplified
+        geometry will be no more than simp_tol from the original.
+    simp_topol = boolean (optional)
+        Whether or not to preserve topology of polygons. If False, a quicker
+        algorithm will be used, but may produce self-intersecting or otherwise
+        invalid geometries.
+    """
+    fname = os.path.basename(poly_shp)
+    outfile = os.path.join(odir, fname)
+    os.makedirs(odir, exist_ok=True)
 
-    def las2iso(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/las2iso_README.txt"
-        cmd = 'las2iso'
-        return self.run(cmd, **kwargs)
+    tile_boundary = gpd.read_file(tile_shp)
+    polys = gpd.read_file(poly_shp)
 
-    def lascolor(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lascolor_README.txt"
-        cmd = 'lascolor'
-        return self.run(cmd, **kwargs)
+    # boolean indicator of whether each polygon falls within tile boundary
+    clean_polys_ix = polys.centroid.within(tile_boundary.loc[0].geometry)
+    # retrieve the polygons within the boundary
+    clean_polys = polys[clean_polys_ix]
 
-    def lasgrid(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasgrid_README.txt"
-        cmd = 'lasgrid'
-        return self.run(cmd, **kwargs)
+    if simp_tol:
+        clean_polys = clean_polys.simplify(simp_tol, simp_topol)
 
-    def lasoverlap(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasoverlap_README.txt"
-        cmd = 'lasoverlap'
-        return self.run(cmd, **kwargs)
-
-    def lasoverage(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasoverage_README.txt"
-        cmd = 'lasoverage'
-        return self.run(cmd, **kwargs)
-
-    def lasboundary(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasboundary_README.txt"
-        cmd = 'lasboundary'
-        return self.run(cmd, **kwargs)
-
-    def lasclip(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasclip_README.txt"
-        cmd = 'lasclip'
-        return self.run(cmd, **kwargs)
-
-    def lasheight(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasheight_README.txt"
-        cmd = 'lasheight'
-        return self.run(cmd, **kwargs)
-
-    def lastrack(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lastrack_README.txt"
-        cmd = 'lastrack'
-        return self.run(cmd, **kwargs)
-
-    def lascanopy(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lascanopy_README.txt"
-        cmd = 'lascanopy'
-        return self.run(cmd, **kwargs)
-
-    def lasthin(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasthin_README.txt"
-        cmd = 'lasthin'
-        return self.run(cmd, **kwargs)
-
-    def lassort(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lassort_README.txt"
-        cmd = 'lassort'
-        return self.run(cmd, **kwargs)
-
-    def lasduplicate(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lassort_README.txt"
-        cmd = 'lasduplicate'
-        return self.run(cmd, **kwargs)
-
-    def lascontrol(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lascontrol_README.txt"
-        cmd = 'lascontrol'
-        return self.run(cmd, **kwargs)
-
-    def lastile(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lastile_README.txt"
-        cmd = 'lastile'
-        return self.run(cmd, **kwargs)
-
-    def lassplit(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lassplit_README.txt"
-        cmd = 'lassplit'
-        return self.run(cmd, **kwargs)
-
-    def txt2las(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/txt2las_README.txt"
-        cmd = 'txt2las'
-        return self.run(cmd, **kwargs)
-
-    def blast2dem(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/blast2dem_README.txt"
-        cmd = 'blast2dem'
-        return self.run(cmd, **kwargs)
-
-    def blast2iso(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/blast2iso_README.txt"
-        cmd = 'blast2iso'
-        return self.run(cmd, **kwargs)
-
-    def las2las(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/las2las_README.txt"
-        cmd = 'las2las'
-        return self.run(cmd, **kwargs)
-
-    def las2shp(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/las2shp_README.txt"
-        cmd = 'las2shp'
-        return self.run(cmd, **kwargs)
-
-    def las2tin(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/las2tin_README.txt"
-        cmd = 'las2shp'
-        return self.run(cmd, **kwargs)
-
-    def lasvoxel(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasvoxel_README.txt"
-        cmd = 'lasvoxel'
-        return self.run(cmd, **kwargs)
-
-    def lasreturn(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasreturn_README.txt"
-        cmd = 'lasreturn'
-        return self.run(cmd, **kwargs)
-
-    def laszip(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/laszip_README.txt"
-        cmd = 'laszip'
-        return self.run(cmd, **kwargs)
-
-    def lasindex(self, **kwargs):
-        "http://www.cs.unc.edu/~isenburg/laszip/download/lasindex_README.txt"
-        cmd = 'lasindex'
-        return self.run(cmd, **kwargs)
+    if len(clean_polys) > 0:
+        clean_polys.to_file(outfile)
