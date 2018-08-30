@@ -35,7 +35,7 @@ class useFUSION(object):
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
             # (this requires WINE to be installed)
-            proc = subprocess.run(['wine', cmd, *switches, *params],
+            proc = subprocess.run(['wine', cmd + '.exe', *switches, *params],
                                        stderr = subprocess.PIPE,
                                        stdout = subprocess.PIPE)
         else:
