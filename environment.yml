@@ -1,0 +1,12 @@
+name: pyFIRS
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.6
+  - numpy
+  - rasterio
+  - geopandas
+  - ipyparallel
+  - tqdm
+prefix: /Users/daviddiaz/anaconda3/envs/pyFIRS
