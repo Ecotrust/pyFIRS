@@ -84,7 +84,7 @@ class LAStools_base(object):
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
             # (this requires WINE to be installed)
-            proc = subprocess.run(['wine', cmd, *kws],
+            proc = subprocess.run(['wine', cmd+'.exe', *kws],
                                        stderr = subprocess.PIPE,
                                        stdout = subprocess.PIPE)
         else:
