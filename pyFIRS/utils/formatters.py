@@ -6,7 +6,7 @@ def listlike(arg):
             hasattr(arg, "__iter__"))
 
 def format_lastools_kws(**kwargs):
-    '''Formats keyword arguments for LAStools command line usage'''
+    '''Formats keyword arguments for LAStools command line usage.'''
     kws = []
     for key, value in kwargs.items():
         if isinstance(value, bool):
@@ -21,7 +21,7 @@ def format_lastools_kws(**kwargs):
     return kws
 
 def format_fusion_kws(**kwargs):
-    '''Formats keyword arguments for FUSION command line usage'''
+    '''Formats keyword arguments for FUSION command line usage.'''
     kws = []
     for key, value in kwargs.items():
         if isinstance(value, bool):
@@ -40,3 +40,24 @@ def format_fusion_args(arg):
         return " ".join(str(x) for x in arg)
     else:
         return str(arg)
+
+def timefmt(seconds):
+    '''Formats a time given in seconds in human-readable format.'''
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return '{:.0f} hrs, {:.0f} min, {:.1f} sec'.format(h,m,s)
+
+def run_speed(res):
+    """Reports time spent processing jobs using ipyparallel.
+
+    Parameters (required)
+    ----------
+    res: an ipyparallel AsyncResult object
+        Produced, for example, when you map a function to a list of inputs,
+        as in `res = view.map_async(my_func, inputs)`
+    """
+    print('Human time spent:', timefmt(res.wall_time))
+    print('Computer time spent:', timefmt(res.serial_time))
+    print('Parallel speedup:', '{:.2f}x'.format(res.serial_time/res.wall_time))
+    print('Human time per job:', '{:.2f} sec'.format(res.wall_time/res.progress))
+    print('Computer time per job:', '{:.2f} sec'.format(res.serial_time/res.progress))
