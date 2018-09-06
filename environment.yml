@@ -2,6 +2,7 @@ name: pyFIRS
 channels:
   - conda-forge
   - defaults
+  - open3d-admin
 dependencies:
   - python>=3.6
   - numpy
@@ -9,4 +10,6 @@ dependencies:
   - geopandas
   - ipyparallel
   - tqdm
+  - laspy
+  - open3d
 prefix: /Users/daviddiaz/anaconda3/envs/pyFIRS
