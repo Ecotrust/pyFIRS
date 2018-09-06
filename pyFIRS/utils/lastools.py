@@ -420,9 +420,9 @@ class useLAStools(LAStools_base):
                            echo=echo)
             dem2_procs.append(proc_dem2)
 
-        # merge the CHM layers into a single pit free CHM GeoTiff
+        # merge the CHM layers into a single pit free CHM raster
         infiles = os.path.join(tmpdir, 'chm_layers', '*.bil')
-        outfile = basename + '_chm_pitfree.tif'
+        outfile = basename + '_chm_pitfree.bil'
         proc_grid = self.lasgrid(i=infiles,
                      merged=True,
                      o=outfile,
