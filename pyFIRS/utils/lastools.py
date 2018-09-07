@@ -99,7 +99,8 @@ class LAStools_base(object):
                 proc = subprocess.run(['WINEPREFIX=~/.wine-{:02d}'.format(wine_prefix),
                                        'wine', cmd+'.exe', *kws],
                                       stderr = subprocess.PIPE,
-                                      stdout = subprocess.PIPE)
+                                      stdout = subprocess.PIPE,
+                                      shell=True)
             else:  # no WINE prefix specified on Linux machine
             # use of a single WINE instance will force execution of jobs
             # in serial rather than parallel
