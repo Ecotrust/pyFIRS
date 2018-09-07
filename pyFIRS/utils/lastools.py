@@ -76,15 +76,6 @@ class LAStools_base(object):
             # makedirs will create whole directory tree recursively if needed
             os.makedirs(path, exist_ok=True)
 
-
-        # check to see if a WINE prefix was specified
-        # for parallel processing on Linux machines
-        if 'wine_prefix' in kwargs:
-            wine_prefix = kwargs['wine_prefix']
-            del kwargs['wine_prefix']
-        else:
-            wine_prefix = False
-
         # format the kwargs
         kws = format_lastools_kws(**kwargs)
 
@@ -93,20 +84,9 @@ class LAStools_base(object):
 
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
-            # (this requires WINE to be installed)
-            # for parallel processing, a separate wineprefix
-            if wine_prefix:
-                proc = subprocess.run(['WINEPREFIX=~/.wine-{:02d}'.format(wine_prefix),
-                                       'wine', cmd+'.exe', *kws],
-                                      stderr = subprocess.PIPE,
-                                      stdout = subprocess.PIPE,
-                                      shell=True)
-            else:  # no WINE prefix specified on Linux machine
-            # use of a single WINE instance will force execution of jobs
-            # in serial rather than parallel
-                proc = subprocess.run(['wine', cmd+'.exe', *kws],
-                                      stderr = subprocess.PIPE,
-                                      stdout = subprocess.PIPE)
+            proc = subprocess.run(['wine', cmd+'.exe', *kws],
+                                  stderr = subprocess.PIPE,
+                                  stdout = subprocess.PIPE)
         else: # we're not on a Linux machine, use windows executable directly
             proc = subprocess.run([cmd, *kws],
                                   stderr = subprocess.PIPE,
@@ -284,7 +264,7 @@ class useLAStools(LAStools_base):
 
     def pitfree(self, lasfile, outdir, units, xy_res=None, z_res=None,
                       splat_radius=None, max_TIN_edge=None, cleanup=True,
-                      echo=False, wine_prefix=None):
+                      echo=False):
         '''Creates a pit-free Canopy Height Model from a lidar point cloud.
 
         This function chains together several LAStools command line tools to
@@ -341,9 +321,6 @@ class useLAStools(LAStools_base):
         echo: boolean (optional)
             If true, will echo to stdout and stderr the calls of all the
             LAStools.
-        wine_prefix: integer (optional)
-            A value indicating where a unique WINE server will be initiated,
-            used only for parallel processing on Linux machines.
         '''
         path_to_file = os.path.abspath(lasfile)
         path, fname = os.path.split(path_to_file)
@@ -361,14 +338,12 @@ class useLAStools(LAStools_base):
                        replace_z=True,
                        keep_class=(1,2,5),
                        drop_below=-0.1, # drop points below the ground
-                       echo=echo,
-                       wine_prefix=wine_prefix)
+                       echo=echo)
 
         # get the minimum and maximum normalized heights
         # we'll use these later for creating layered canopy height models
         infile = os.path.join(tmpdir,'normalized','*.laz')
-        info_proc = self.lasinfo(i=infile,
-                                 wine_prefix=wine_prefix)
+        info_proc = self.lasinfo(i=infile)
         lasinfo = info_proc.stderr.decode()
         _, _, zmin, _, _, zmax = get_bounds(lasinfo)
 
@@ -409,8 +384,7 @@ class useLAStools(LAStools_base):
                        drop_z_above=0.1,
                        step=xy_res,  # resolution of ground model
                        use_tile_bb=True, # trim the tile buffers
-                       echo=echo,
-                       wine_prefix=wine_prefix)
+                       echo=echo)
 
         # "splat" and thin the lidar point cloud to get highest points using a
         # finer resolution than our final CHM will be
@@ -422,8 +396,7 @@ class useLAStools(LAStools_base):
                      highest=True,
                      subcircle=splat_radius,
                      step=xy_res/2.0,
-                     echo=echo,
-                     wine_prefix=wine_prefix)
+                     echo=echo)
 
         # using the "splatted" lidar point cloud, generate CHM layers above
         # ground, above 2m, and then in 5m increments up to zmax...
@@ -443,8 +416,7 @@ class useLAStools(LAStools_base):
                            kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
                            step=xy_res,  # resolution of layer DEM
                            use_tile_bb=True, # trim tile buffer
-                           echo=echo,
-                           wine_prefix=wine_prefix)
+                           echo=echo)
             dem2_procs.append(proc_dem2)
 
         # merge the CHM layers into a single pit free CHM raster
@@ -456,8 +428,7 @@ class useLAStools(LAStools_base):
                      odir=outdir,
                      highest=True,
                      step=xy_res, # resolution of pit-free CHM
-                     echo=echo,
-                     wine_prefix=wine_prefix)
+                     echo=echo)
 
         if cleanup:
             shutil.rmtree(tmpdir)
