@@ -283,7 +283,7 @@ class useLAStools(LAStools_base):
 
     def pitfree(self, lasfile, outdir, units, xy_res=None, z_res=None,
                       splat_radius=None, max_TIN_edge=None, cleanup=True,
-                      echo=False):
+                      echo=False, wine_prefix=None):
         '''Creates a pit-free Canopy Height Model from a lidar point cloud.
 
         This function chains together several LAStools command line tools to
