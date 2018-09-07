@@ -76,6 +76,13 @@ class LAStools_base(object):
             # makedirs will create whole directory tree recursively if needed
             os.makedirs(path, exist_ok=True)
 
+
+        # check to see if a WINE prefix was specified
+        # for parallel processing on Linux machines
+        if 'wine_prefix' in kwargs:
+            wine_prefix = kwargs['wine_prefix']
+            del kwargs['wine_prefix']
+
         # format the kwargs
         kws = format_lastools_kws(**kwargs)
 
@@ -85,13 +92,22 @@ class LAStools_base(object):
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
             # (this requires WINE to be installed)
-            proc = subprocess.run(['wine', cmd+'.exe', *kws],
-                                       stderr = subprocess.PIPE,
-                                       stdout = subprocess.PIPE)
-        else:
+            # for parallel processing, a separate wineprefix
+            if wine_prefix:
+                proc = subprocess.run(['WINEPREFIX=~/.wine-{:02d}'.format(wine_prefix),
+                                       'wine', cmd+'.exe', *kws],
+                                      stderr = subprocess.PIPE,
+                                      stdout = subprocess.PIPE)
+            else:  # no WINE prefix specified on Linux machine
+            # use of a single WINE instance will force execution of jobs
+            # in serial rather than parallel
+                proc = subprocess.run(['wine', cmd+'.exe', *kws],
+                                      stderr = subprocess.PIPE,
+                                      stdout = subprocess.PIPE)
+        else: # we're not on a Linux machine, use windows executable directly
             proc = subprocess.run([cmd, *kws],
-                                       stderr = subprocess.PIPE,
-                                       stdout = subprocess.PIPE)
+                                  stderr = subprocess.PIPE,
+                                  stdout = subprocess.PIPE)
         if echo:
             print(proc.stdout.decode())
             print(proc.stderr.decode())
