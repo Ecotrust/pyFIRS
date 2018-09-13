@@ -76,6 +76,10 @@ class LAStools_base(object):
             # makedirs will create whole directory tree recursively if needed
             os.makedirs(path, exist_ok=True)
 
+        if 'wine_prefix' in kwargs:
+            wine_prefix = kwargs['wine_prefix']
+            del kwargs['wine_prefix']
+
         # format the kwargs
         kws = format_lastools_kws(**kwargs)
 
@@ -84,8 +88,7 @@ class LAStools_base(object):
 
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
-            if wine_prefix: # if we have a global variable indicating which
-            # WINE server to use
+            if wine_prefix: # if we're using specific WINE server
                 proc = subprocess.run('WINEPREFIX=~/.wine-{} wine {}.exe {}'.format(wine_prefix, cmd, ' '.join(kws)),
                        stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             else: # no wine_prefix defined
