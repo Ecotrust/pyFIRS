@@ -84,7 +84,12 @@ class LAStools_base(object):
 
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
-            proc = subprocess.run(['wine', cmd+'.exe', *kws],
+            if wine_prefix: # if we have a global variable indicating which
+            # WINE server to use
+                proc = subprocess.run('WINEPREFIX=~/.wine-{} wine {}.exe {}'.format(wine_prefix, cmd, ' '.join(kws)),
+                       stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+            else: # no wine_prefix defined
+                proc = subprocess.run(['wine', cmd+'.exe', *kws],
                                   stderr = subprocess.PIPE,
                                   stdout = subprocess.PIPE)
         else: # we're not on a Linux machine, use windows executable directly
