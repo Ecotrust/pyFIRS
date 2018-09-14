@@ -79,6 +79,8 @@ class LAStools_base(object):
         if 'wine_prefix' in kwargs:
             wine_prefix = kwargs['wine_prefix']
             del kwargs['wine_prefix']
+        else:
+            wine_prefix = None
 
         # format the kwargs
         kws = format_lastools_kws(**kwargs)
