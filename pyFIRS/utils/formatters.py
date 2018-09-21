@@ -24,10 +24,15 @@ def format_fusion_kws(**kwargs):
     '''Formats keyword arguments for FUSION command line usage.'''
     kws = []
     for key, value in kwargs.items():
+        # catch and replace kwarg names python doesn't like (class, ascii)
         if key == 'las_class': # can't specify 'class' as a kwarg
             key = 'class'
         if key == 'asc': # can't specify 'ascii' as a kwarg
             key == 'ascii'
+
+        # make sure forward slashes in kwargs are replaced with backslashes
+        value = value.replace('/','\\')
+
         if isinstance(value, bool):
             kws.append('/{}'.format(key))
         elif listlike(value):
@@ -43,7 +48,7 @@ def format_fusion_args(arg):
     if listlike(arg):
         return " ".join(str(x) for x in arg)
     else:
-        return str(arg)
+        return str(arg).replace('/','\\')
 
 def timefmt(seconds):
     '''Formats a time given in seconds in human-readable format.'''

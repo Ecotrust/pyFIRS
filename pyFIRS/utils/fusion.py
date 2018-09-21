@@ -17,11 +17,6 @@ class useFUSION(object):
         "Formats and executes a FUSION command line call using subprocess"
         # prepend the path to FUSION tools to the user-specified command
         cmd = os.path.join(self.src, cmd)
-        # format kwargs as FUSION 'switches'
-        switches = format_fusion_kws(**kwargs)
-
-        # format the required parameters for each function as strings
-        params = [format_fusion_args(param) for param in params]
 
         # check to see if echo was requested
         if 'echo' in kwargs:
@@ -42,6 +37,14 @@ class useFUSION(object):
             del kwargs['wine_prefix']
         else:
             wine_prefix = None
+
+        # format kwargs as FUSION 'switches'
+        switches = format_fusion_kws(**kwargs)
+
+        # format the required parameters for each function as strings
+        params = [format_fusion_args(param) for param in params]
+
+
 
         cmd = os.path.join(self.src, cmd)
 
