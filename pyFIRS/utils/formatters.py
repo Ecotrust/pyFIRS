@@ -28,11 +28,7 @@ def format_fusion_kws(**kwargs):
         if key == 'las_class': # can't specify 'class' as a kwarg
             key = 'class'
         if key == 'asc': # can't specify 'ascii' as a kwarg
-            key == 'ascii'
-
-        # make sure forward slashes in kwargs are replaced with backslashes
-        if type(value) == str:
-            value = value.replace('/','\\')
+            key = 'ascii'
 
         if isinstance(value, bool):
             kws.append('/{}'.format(key))
@@ -41,7 +37,7 @@ def format_fusion_kws(**kwargs):
             kws.append(','.join(str(x) for x in value))
         else:
             kws.append('/{}:'.format(key))
-            kws.append(str(value))
+            kws.append(str(value).replace('/','\\'))
     return kws
 
 def format_fusion_args(arg):
