@@ -9,6 +9,10 @@ def format_lastools_kws(**kwargs):
     '''Formats keyword arguments for LAStools command line usage.'''
     kws = []
     for key, value in kwargs.items():
+        if key == 'las_class': # can't specify 'class' as a kwarg
+            key = 'class'
+        if key == 'asc': # can't specify 'ascii' as a kwarg
+            key == 'ascii'
         if isinstance(value, bool):
             kws.append('-{}'.format(key))
         elif listlike(value):
