@@ -273,8 +273,8 @@ class useLAStools(LAStools_base):
     """
 
     def pitfree(self, lasfile, outdir, units, xy_res=None, z_res=None,
-                      splat_radius=None, max_TIN_edge=None, cleanup=True,
-                      echo=False, wine_prefix=None):
+                      splat_radius=None, max_TIN_edge=None, blast=False,
+                      cleanup=True, echo=False, wine_prefix=None):
         '''Creates a pit-free Canopy Height Model from a lidar point cloud.
 
         This function chains together several LAStools command line tools to
@@ -325,6 +325,10 @@ class useLAStools(LAStools_base):
             considered by las2dem in units of meters, and conversion to feet
             is handled by las2dem if the LAS header indicates units are in ft.
             Default is 1.0 meters.
+        blast: boolean (optional)
+            Whether or not to use BLAST commands from LAStools to handle larger
+            files. If True, will employ blast2dem and rather than las2dem.
+            Defaults to False (i.e., to use las2dem).
         cleanup: boolean (optional)
             Whether or not to remove the temporary working directory and
             intermediate files produced. Defaults to True.
@@ -392,16 +396,26 @@ class useLAStools(LAStools_base):
         infile = os.path.join(tmpdir, 'normalized', '*.laz') # *_height.laz
         odir = os.path.join(tmpdir, 'chm_layers')
         odix = '_chm_ground'
-        proc_dem1 = self.blast2dem(i=infile,
-                                   odir=odir,
-                                   odix=odix,
-                                   obil=True,
-                                   drop_z_above=0.1,
-                                   step=xy_res,  # resolution of ground model
-                                   use_tile_bb=True, # trim the tile buffers
-                                   echo=echo,
-                                   wine_prefix=wine_prefix)
-
+        if blast:
+            proc_dem1 = self.blast2dem(i=infile,
+                                       odir=odir,
+                                       odix=odix,
+                                       obil=True,
+                                       drop_z_above=0.1,
+                                       step=xy_res,  # resolution of ground model
+                                       use_tile_bb=True, # trim the tile buffers
+                                       echo=echo,
+                                       wine_prefix=wine_prefix)
+        else:
+            proc_dem1 = self.las2dem(i=infile,
+                                     odir=odir,
+                                     odix=odix,
+                                     obil=True,
+                                     drop_z_above=0.1,
+                                     step=xy_res,  # resolution of ground model
+                                     use_tile_bb=True, # trim the tile buffers
+                                     echo=echo,
+                                     wine_prefix=wine_prefix)
         # "splat" and thin the lidar point cloud to get highest points using a
         # finer resolution than our final CHM will be
         infile = os.path.join(tmpdir, 'normalized', '*.laz') # *_height.laz
@@ -425,16 +439,28 @@ class useLAStools(LAStools_base):
         for i, ht in enumerate(hts):
             odix = '_chm_{:02d}_{:03d}'.format(i, int(ht))
             odir = os.path.join(tmpdir, 'chm_layers')
-            proc_dem2 = self.blast2dem(i=infile,
-                                       odir=odir,
-                                       odix=odix,
-                                       obil=True,
-                                       drop_z_below=ht, # specify layer height from ground
-                                       kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
-                                       step=xy_res,  # resolution of layer DEM
-                                       use_tile_bb=True, # trim tile buffer
-                                       echo=echo,
-                                       wine_prefix=wine_prefix)
+            if blast:
+                proc_dem2 = self.blast2dem(i=infile,
+                                           odir=odir,
+                                           odix=odix,
+                                           obil=True,
+                                           drop_z_below=ht, # specify layer height from ground
+                                           kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
+                                           step=xy_res,  # resolution of layer DEM
+                                           use_tile_bb=True, # trim tile buffer
+                                           echo=echo,
+                                           wine_prefix=wine_prefix)
+            else:
+                proc_dem2 = self.las2dem(i=infile,
+                                         odir=odir,
+                                         odix=odix,
+                                         obil=True,
+                                         drop_z_below=ht, # specify layer height from ground
+                                         kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
+                                         step=xy_res,  # resolution of layer DEM
+                                         use_tile_bb=True, # trim tile buffer
+                                         echo=echo,
+                                         wine_prefix=wine_prefix)
             dem2_procs.append(proc_dem2)
 
         # merge the CHM layers into a single pit free CHM raster
