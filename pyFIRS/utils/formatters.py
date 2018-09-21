@@ -33,11 +33,9 @@ def format_fusion_kws(**kwargs):
         if isinstance(value, bool):
             kws.append('/{}'.format(key))
         elif listlike(value):
-            kws.append('/{}:'.format(key))
-            kws.append(','.join(str(x) for x in value))
+            kws.append('/{}:'.format(key)+','.join(str(x) for x in value))
         else:
-            kws.append('/{}:'.format(key))
-            kws.append(str(value).replace('/','\\'))
+            kws.append('/{}:'.format(key)+str(value).replace('/','\\'))
     return kws
 
 def format_fusion_args(arg):
