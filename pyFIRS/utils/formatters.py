@@ -31,7 +31,8 @@ def format_fusion_kws(**kwargs):
             key == 'ascii'
 
         # make sure forward slashes in kwargs are replaced with backslashes
-        value = value.replace('/','\\')
+        if type(value) == str:
+            value = value.replace('/','\\')
 
         if isinstance(value, bool):
             kws.append('/{}'.format(key))
