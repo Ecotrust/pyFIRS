@@ -25,19 +25,35 @@ class useFUSION(object):
 
         # check to see if echo was requested
         if 'echo' in kwargs:
-            echo = True
+            echo = kwargs['echo']
             del kwargs['echo']
         else:
             echo = False
+
+        # check to see if output directory exists, if not, make it
+        if 'odir' in kwargs:
+            path = kwargs['odir']
+            # makedirs will create whole directory tree recursively if needed
+            os.makedirs(path, exist_ok=True)
+            del kwargs['odir']
+
+        if 'wine_prefix' in kwargs:
+            wine_prefix = kwargs['wine_prefix']
+            del kwargs['wine_prefix']
+        else:
+            wine_prefix = None
 
         cmd = os.path.join(self.src, cmd)
 
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
-            # (this requires WINE to be installed)
-            proc = subprocess.run(['wine', cmd + '.exe', *switches, *params],
-                                       stderr = subprocess.PIPE,
-                                       stdout = subprocess.PIPE)
+            if wine_prefix: # if we're using specific WINE server
+                proc = subprocess.run('WINEPREFIX=~/.wine-{} wine {}.exe {} {}'.format(wine_prefix, cmd, ' '.join(switches), ' '.join(params)),
+                       stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+            else: # no wine_prefix defined
+                proc = subprocess.run(['wine', cmd+'.exe', *switches, *params],
+                                  stderr = subprocess.PIPE,
+                                  stdout = subprocess.PIPE)
         else:
             proc = subprocess.run([cmd, *switches, *params],
                                        stderr = subprocess.PIPE,
@@ -297,6 +313,8 @@ class useFUSION(object):
         surfacefile: string
             Name for output canopy surface file (stored in PLANS DTM format
             with .dtm extension).
+        cellsize: numeric
+            Desired grid cell size in the same units as LIDAR data.
         xyunits: string
             Units for LIDAR data XY:
                 'M' for meters
