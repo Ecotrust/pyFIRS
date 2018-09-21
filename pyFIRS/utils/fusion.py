@@ -388,7 +388,7 @@ class useFUSION(object):
             A,1,2,3,4,5,6,7,8,9,F,L,O) Options are specified without commas
             (e.g. return=123) For LAS files only: F indicates first and only
             returns, L indicates last of many returns.
-        class: string or list-like
+        las_class: string or list-like
             Used with LAS format files only. Specifies that only points with
             classification values listed are to be used when creating the canopy
             surface. If defined as a string, classification values should be
@@ -402,7 +402,7 @@ class useFUSION(object):
             files (must have “.txt” extension). In operation, CanopyModel will
             determine which models are needed by examining the extents of the
             input point data.
-        ascii: boolean
+        asc: boolean
             Write the output surface in ASCII raster format in addition to
             writing the surface in DTM format.
         grid: string, 4-tuple or list-like (X,Y,W,H)
@@ -575,7 +575,7 @@ class useFUSION(object):
             maximum, or range of elevations are outside the range defined by:
             mean value +- multiplier * std dev
             The default multiplier is 2.0
-        class: string
+        las_class: string
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
@@ -716,7 +716,7 @@ class useFUSION(object):
             include A,1,2,3,4,5,6,7,8,9,F,L. A includes all returns. For LAS
             files only: F indicates first and only returns, L indicates last of
             many returns. F and L will not work with non-LAS files.
-        class: string or list-like
+        las_class: string or list-like
             Used with LAS format files only. Specifies that only points with
             classification values listed are to be included in the subsample.
             Classification values should be separated by a comma e.g. (2,3,4,5)
@@ -1036,7 +1036,7 @@ class useFUSION(object):
             useful for programs that read or write point files.
         all: boolean
             Use all returns to calculate the cover data. The default is to use only first returns.
-        class: string or list-like
+        las_class: string or list-like
             Used with LAS format files only. Specifies that only points with
             classification values listed are to be included in the subsample.
             Classification values should be separated by a comma e.g. (2,3,4,5)
@@ -1175,7 +1175,7 @@ class useFUSION(object):
             groundfile.
         maxsliceht: numeric
             Limit the range of height slices to 0 to high.
-        class: string, or list-like
+        las_class: string, or list-like
             Used with LAS format files only. Specifies that only points with
             classification values listed are to be included when computing
             density metrics. Classification values should be separated by a
@@ -1558,7 +1558,7 @@ class useFUSION(object):
         gapratio: numeric
             Proportion of points in window that can be above a vertical gap.
             Ranges from 0.0 to 1.0 Used only with the outlier2 filter.
-        class: string or list-like
+        las_class: string or list-like
             Used with LAS format files only. Specifies that only points with
             classification values listed are to be included in the subsample.
             Classification values should be separated by a comma e.g. (2,3,4,5)
@@ -1722,7 +1722,7 @@ class useFUSION(object):
         outlier: 2-tuple (low,high)
             Omit points with elevations below low and above high. low and high
             are interpreted as heights above ground.
-        class: string or list-like
+        las_class: string or list-like
             Used with LAS format files only. Specifies that only points with
             classification values listed are to be included in the subsample.
             Classification values should be separated by a comma e.g. (2,3,4,5)
@@ -1835,7 +1835,7 @@ class useFUSION(object):
             smoothing window in data units and mult is a multiplier for the
             bandwidth parameter of the KDE. Default window is 2.5 and the
             multiplier is 1.0
-        ascii: boolean
+        asc: boolean
             Store raster files in ASCII raster format for direct import into
             ArcGIS. Using this option preserves metrics with negative values.
             Such values are lost when raster data are stored using the PLANS DTM
@@ -2070,7 +2070,7 @@ class useFUSION(object):
         filldist: int (#)
             Maximum search radius (in cells) used when filling holes in the
             surface. Default is 99 cells.
-        class: string or list-like
+        las_class: string or list-like
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
@@ -2153,7 +2153,7 @@ class useFUSION(object):
         ground: string, path to file
             Use the specified surface model to represent the ground surface file
             may be wildcard or text list file (extension .txt only)
-        ascii: boolean
+        asc: boolean
             Output all files in ASCII raster format with the .asc extension
         area: boolean
             Compute the surface area of inputfile instead of the surface area
@@ -2280,7 +2280,7 @@ class useFUSION(object):
             ground point data set.
         iterations: int (#)
             Number of iterations for the filtering logic (default is 5)
-        class: string or list-like
+        las_class: string or list-like
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
@@ -2513,7 +2513,7 @@ class useFUSION(object):
             Save the intensity image using the JPEG format (default is BMP)
         projection: string, path to file
             Associate the specified projection file with image products.
-        class: string or list-like
+        las_class: string or list-like
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
@@ -2656,7 +2656,7 @@ class useFUSION(object):
             useful for programs that read or write point files.
         lda: boolean
             Store output data file in FUSION's LDA format
-        class: string or list-like
+        las_class: string or list-like
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
@@ -2898,7 +2898,7 @@ class useFUSION(object):
             output files will be identified using the sequential number
             associated with the polygon rather than a value from a database
             field.
-        class: string or list-like
+        las_class: string or list-like
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
@@ -3205,7 +3205,7 @@ class useFUSION(object):
             Use random number stream # (100 streams are available 0-99)
         index: boolean
             Create FUSION index files for the OutputFile
-        class: string or list-like
+        las_class: string or list-like
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
@@ -3366,7 +3366,7 @@ class useFUSION(object):
               include A,1,2,3,4,5,6,7,8,9,F,L,O) Options are specified without
               commas (e.g. /return:123) For LAS files only: F indicates first
               and only returns, L indicates last of many returns.
-        class: string or list-like
+        las_class: string or list-like
             LAS files only: Specifies that only points with classification
             values listed are to be included in the subsample. Classification
             values should be separated by a comma. e.g. (2,3,4,5) and can range
