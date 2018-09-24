@@ -1,12 +1,27 @@
 import os
 import subprocess
 import platform
-from .formatters import listlike, format_lastools_kws
+import shutil
+from pyFIRS.utils import listlike
 import urllib.request
 import geopandas as gpd
-import shutil
-import ipyparallel as ipp
 import numpy as np
+
+# helper function for formatting command line arguments
+def format_lastools_kws(**kwargs):
+    '''Formats keyword arguments for LAStools command line usage.'''
+    kws = []
+    for key, value in kwargs.items():
+        if isinstance(value, bool):
+            kws.append('-{}'.format(key))
+        elif listlike(value):
+            kws.append('-{}'.format(key))
+            for arg in value:
+                kws.append(str(arg))
+        else:
+            kws.append('-{}'.format(key))
+            kws.append(str(value))
+    return kws
 
 class LAStools_base(object):
     "A class for executing LAStools functions as methods"
@@ -91,7 +106,7 @@ class LAStools_base(object):
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
             if wine_prefix: # if we're using specific WINE server
-                proc = subprocess.run('WINEPREFIX=~/.wine-{} wine {}.exe {}'.format(wine_prefix, cmd, ' '.join(kws)),
+                proc = subprocess.run('WINEPREFIX={} wine {}.exe {}'.format(wine_prefix, cmd, ' '.join(kws)),
                        stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             else: # no wine_prefix defined
                 proc = subprocess.run(['wine', cmd+'.exe', *kws],
@@ -480,50 +495,51 @@ class useLAStools(LAStools_base):
 
         return (proc_height, proc_dem1, proc_thin, dem2_procs, proc_grid)
 
-def clean_tile(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None):
-    """Removes polygons within the buffer zone of a tile.
-
-    This function removes polygons from a shapefile that fall in the buffered
-    area of point cloud tile. When building footprints or tree crowns (for
-    example) are delineated from a point cloud, a buffer around the tile is
-    generally be used to avoid edge effects. This tool computes the centroid of
-    each polygon and determines whether it falls within the bounds of the
-    unbuffered tile. It outputs a new shapefile containing only those polygons
-    whose centroids fall within the unbuffered tile.
-
-    The polygons may be simplified using optional arguments simp_tol and
-    simp_topol to reduce the number of points that define their boundaries.
-
-    Parameters
-    ----------
-    polygons_shp: string, path to shapefile (required)
-        A shapefile containing the polygons delineated within a buffered tile.
-    tile_shp: string, path to shapefile (required)
-        A shapefile containing the bounds of the tile WITHOUT buffers
-    odir: string, path to directory (required)
-        Path to the output directory for the new shapefile
-    simp_tol = numeric,
-        Tolerance level for simplification. All points within a simplified
-        geometry will be no more than simp_tol from the original.
-    simp_topol = boolean (optional)
-        Whether or not to preserve topology of polygons. If False, a quicker
-        algorithm will be used, but may produce self-intersecting or otherwise
-        invalid geometries.
-    """
-    fname = os.path.basename(poly_shp)
-    outfile = os.path.join(odir, fname)
-    os.makedirs(odir, exist_ok=True)
-
-    tile_boundary = gpd.read_file(tile_shp)
-    polys = gpd.read_file(poly_shp)
-
-    # boolean indicator of whether each polygon falls within tile boundary
-    clean_polys_ix = polys.centroid.within(tile_boundary.loc[0].geometry)
-    # retrieve the polygons within the boundary
-    clean_polys = polys[clean_polys_ix]
-
-    if simp_tol:
-        clean_polys = clean_polys.simplify(simp_tol, simp_topol)
-
-    if len(clean_polys) > 0:
-        clean_polys.to_file(outfile)
+# def clean_buffer_polys(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None):
+#     """Removes polygons within the buffer zone of a tile.
+#
+#     This function removes polygons from a shapefile that fall in the buffered
+#     area of point cloud tile. When building footprints or tree crowns (for
+#     example) are delineated from a point cloud, a buffer around the tile is
+#     generally be used to avoid edge effects. This tool computes the centroid of
+#     each polygon and determines whether it falls within the bounds of the
+#     unbuffered tile. It outputs a new shapefile containing only those polygons
+#     whose centroids fall within the unbuffered tile.
+#
+#     The polygons may be simplified using optional arguments simp_tol and
+#     simp_topol to reduce the number of points that define their boundaries.
+#
+#     Parameters
+#     ----------
+#     polygons_shp: string, path to shapefile (required)
+#         A shapefile containing the polygons delineated within a buffered tile.
+#     tile_shp: string, path to shapefile (required)
+#         A shapefile containing the bounds of the tile WITHOUT buffers
+#     odir: string, path to directory (required)
+#         Path to the output directory for the new shapefile
+#     simp_tol = numeric,
+#         Tolerance level for simplification. All points within a simplified
+#         geometry will be no more than simp_tol from the original.
+#     simp_topol = boolean (optional)
+#         Whether or not to preserve topology of polygons. If False, a quicker
+#         algorithm will be used, but may produce self-intersecting or otherwise
+#         invalid geometries.
+#     """
+#     fname = os.path.basename(poly_shp)
+#     outfile = os.path.join(odir, fname)
+#     os.makedirs(odir, exist_ok=True)
+#
+#     tile_boundary = gpd.read_file(tile_shp)
+#     polys = gpd.read_file(poly_shp)
+#
+#     # boolean indicator of whether each polygon falls within tile boundary
+#     clean_polys_ix = polys.centroid.within(tile_boundary.loc[0].geometry)
+#     # retrieve the polygons within the boundary
+#     clean_polys = polys[clean_polys_ix]
+#
+#     if simp_tol:
+#         clean_polys = clean_polys.simplify(simp_tol, simp_topol)
+#
+#     if len(clean_polys) > 0:
+#         clean_polys.to_file(outfile)
+#

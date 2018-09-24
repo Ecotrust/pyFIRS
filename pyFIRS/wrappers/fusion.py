@@ -2,7 +2,33 @@ import os
 import subprocess
 import platform
 import warnings
-from .formatters import listlike, format_fusion_kws, format_fusion_args
+from pyFIRS.utils import listlike
+
+# helper functions for formatting command line arguments
+def format_fusion_kws(**kwargs):
+    '''Formats keyword arguments for FUSION command line usage.'''
+    kws = []
+    for key, value in kwargs.items():
+        # catch and replace kwarg names python doesn't like (class, ascii)
+        if key == 'las_class': # can't specify 'class' as a kwarg
+            key = 'class'
+        if key == 'asc': # can't specify 'ascii' as a kwarg
+            key = 'ascii'
+
+        if isinstance(value, bool):
+            kws.append('/{}'.format(key))
+        elif listlike(value):
+            kws.append('/{}:'.format(key)+','.join(str(x) for x in value))
+        else:
+            kws.append('/{}:'.format(key)+str(value).replace('/','\\'))
+    return kws
+
+def format_fusion_args(arg):
+    '''Formats positional arguments for FUSION command line usage'''
+    if listlike(arg):
+        return " ".join(str(x) for x in arg)
+    else:
+        return str(arg).replace('/','\\')
 
 # Pythonic wrappers for FUSION command line tools
 class useFUSION(object):
@@ -51,7 +77,7 @@ class useFUSION(object):
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
             if wine_prefix: # if we're using specific WINE server
-                proc = subprocess.run('WINEPREFIX=~/.wine-{} wine {}.exe {} {}'.format(wine_prefix, cmd, ' '.join(switches), ' '.join(params)),
+                proc = subprocess.run('WINEPREFIX={} wine {}.exe {} {}'.format(wine_prefix, cmd, ' '.join(switches), ' '.join(params)),
                        stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             else: # no wine_prefix defined
                 proc = subprocess.run(['wine', cmd+'.exe', *switches, *params],
