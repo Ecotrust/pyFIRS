@@ -5,6 +5,7 @@ import geopandas as gpd
 import rasterio
 import numpy as np
 from tqdm.autonotebook import tqdm
+import time
 
 def listlike(arg):
     '''Checks whether an argument is list-like, returns boolean'''
