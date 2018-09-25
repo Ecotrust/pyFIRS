@@ -152,7 +152,7 @@ def clip_tile_from_shp(in_raster, in_shp, odir):
     proc_clip: CompletedProcess
         The result of executing subprocess.run using the rio clip command.
     '''
-    fname = os.path.basename(in_raster).split('.')[0]
+    basename = os.path.basename(in_raster)
     # read the shapefile using geopandas and calculate its bounds
     gdf = gpd.read_file(in_shp)
     tile_bnds = ' '.join(str(x) for x in gdf.total_bounds)
