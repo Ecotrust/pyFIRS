@@ -240,5 +240,5 @@ def setup_cluster():
         import rasterio
         from pyFIRS.utils import clip_tile_from_shp, convert_project
 
-    Print('Viewing {} workers in the cluster.'.format(len(rc.ids)))
+    print('Viewing {} workers in the cluster.'.format(len(rc.ids)))
     return rc, dv, v
