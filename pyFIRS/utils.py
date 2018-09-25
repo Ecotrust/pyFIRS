@@ -202,3 +202,42 @@ def convert_project(infile, to_fmt, crs):
                                   stderr=subprocess.PIPE,
                                   stdout=subprocess.PIPE)
     return proc_convert, proc_project
+
+def setup_cluster():
+    '''Sets up framework for executing parallel jobs using ipyparallel.
+
+    This function imports pyFIRS and other relevant packages to the workers in
+    the cluster.
+
+    This assumes a cluster has already been started. You can start a cluster
+    from the command line (or using jupyter notebook magics) using:
+    `> ipcluster start -n {num_cores}`
+    replacing {num_cores} with the number of separate processes you want to have
+    running. Alternatively, if you are using `ipyparallel` version >= 4.0 and
+    are using a Jupyter Notebook, you should find a tab when you first launch
+    jupyter where you can start/stop IPython clusters.
+
+    Returns
+    -------
+    rc: Client
+        ipyparallel Client
+    dv: DirectView
+        ipyparallel DirectView object
+    v: LoadBalancedView
+        ipyparallel LoadBalancedVIew object
+    '''
+    rc = ipp.Client()
+    dv = rc[:] # direct view of the workers
+    v = rc.load_balanced_view() # load-balanced view of the workers
+
+    # import the relevant packages to all the workers
+    with dv.sync_imports():
+        import subprocess
+        import os
+        from pyFIRS.wrappers import lastools
+        from pyFIRS.wrappers import fusion
+        import rasterio
+        from pyFIRS.utils import clip_tile_from_shp, convert_project
+
+    Print('Viewing {} workers in the cluster.'.format(len(rc.ids)))
+    return rc, dv, v
