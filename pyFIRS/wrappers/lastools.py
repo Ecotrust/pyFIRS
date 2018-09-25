@@ -26,7 +26,7 @@ def format_lastools_kws(**kwargs):
 class LAStools_base(object):
     "A class for executing LAStools functions as methods"
 
-    def __init__(self,src='C:/lastools/bin'):
+    def __init__(self,src='C:\\lastools\\bin'):
         "Initialize with a path to the LAStools executables"
         self.src = src
         self.system = platform.system()

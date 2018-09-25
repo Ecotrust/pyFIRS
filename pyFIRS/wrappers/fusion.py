@@ -34,7 +34,7 @@ def format_fusion_args(arg):
 class useFUSION(object):
     "A class for executing FUSION functions as methods"
 
-    def __init__(self,src='C:/FUSION'):
+    def __init__(self,src='C:\\FUSION'):
         "Initialize with a path to the FUSION executables"
         self.src = src
         self.system = platform.system()
