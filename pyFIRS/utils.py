@@ -152,17 +152,53 @@ def clip_tile_from_shp(in_raster, in_shp, odir):
     proc_clip: CompletedProcess
         The result of executing subprocess.run using the rio clip command.
     '''
-    basename = os.path.basename(infile)
-    fname, suffix = basename.split('.')
-    tile_shp = os.path.join(interim, 'tile_boundaries', fname+'.shp')
+    fname = os.path.basename(in_raster).split('.')[0]
     # read the shapefile using geopandas and calculate its bounds
-    gdf = gpd.read_file(tile_shp)
+    gdf = gpd.read_file(in_shp)
     tile_bnds = ' '.join(str(x) for x in gdf.total_bounds)
 
     # create the output directory if it doesn't already exist
     os.makedirs(odir, exist_ok=True)
     outfile = os.path.join(odir, basename)
     # clip the raster
-    proc_clip = subprocess.run(['rio', 'clip', infile, outfile, '--bounds', tile_bnds],
-                              stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc_clip = subprocess.run(['rio', 'clip', in_raster, outfile, '--bounds', tile_bnds],
+                               stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     return proc_clip
+
+def convert_project(infile, to_fmt, crs):
+    '''Converts a raster to another format and specifies its projection.
+
+    Uses rasterio command line tool executed using subprocess. The file
+    generated will have the same name and be in the same folder as the input
+    file.
+
+    Parameters
+    ----------
+    infile: string, path to file
+        input raster to be converted
+    to_fmt: string
+        extension indicating file format to convert to (e.g., '.tif')
+    crs: string
+        specification of coordinate reference system to use following rasterio
+        command line tool (RIO) formatting (e.g., 'EPSG:3857')
+
+    Returns
+    -------
+    proc_convert: CompletedProcess
+        result of executing subprocess.run using rio convert
+    proc_project: CompletedProcess
+        result of executing subprocess.run using rio edit-info
+    '''
+    outdir, basename = os.path.split(infile)
+    fname = basename.split('.')[0]
+    outfile = os.path.join(outdir, fname+to_fmt)
+
+    # convert the file to the new format
+    proc_convert = subprocess.run(['rio', 'convert', infile, outfile],
+                                  stderr=subprocess.PIPE,
+                                  stdout=subprocess.PIPE)
+    # add the projection info
+    proc_project = subprocess.run(['rio', 'edit-info', '--crs', crs, outfile],
+                                  stderr=subprocess.PIPE,
+                                  stdout=subprocess.PIPE)
+    return proc_convert, proc_project
