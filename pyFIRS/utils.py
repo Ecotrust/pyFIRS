@@ -6,6 +6,7 @@ import rasterio
 import numpy as np
 from tqdm.autonotebook import tqdm
 import time
+import ipyparallel as ipp
 
 def listlike(arg):
     '''Checks whether an argument is list-like, returns boolean'''
