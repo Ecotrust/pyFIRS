@@ -47,7 +47,7 @@ class LAStools_base(object):
                  self.las2las.__func__, self.las2shp.__func__,
                  self.las2tin.__func__, self.lasvoxel.__func__,
                  self.lasreturn.__func__, self.laszip.__func__,
-                 self.lasindex.__func__]
+                 self.lasindex.__func__, self.lasvalidate.__func__]
 
         for tool in tools:
             name = tool.__name__
@@ -248,6 +248,10 @@ class LAStools_base(object):
 
     def lasindex(self, **kwargs):
         cmd = 'lasindex'
+        return self.run(cmd, **kwargs)
+
+    def lasvalidate(self, **kwargs):
+        cmd = 'lasvalidate'
         return self.run(cmd, **kwargs)
 
 
