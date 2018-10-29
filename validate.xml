@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LASvalidator>
+  <report>
+    <file>
+      <name>/storage/lidar/Swinomish_Lidar_2016/source/q48122D5410.laz</name>
+      <path>/storage/lidar/Swinomish_Lidar_2016/source/q48122D5410.laz</path>
+      <version>1.4</version>
+      <system_identifier>LAStools (c) by rapidlasso GmbH</system_identifier>
+      <generating_software>las2las (version 180812)</generating_software>
+      <point_data_format>1</point_data_format>
+      <CRS>NAD83 / Washington South (ftUS)</CRS>
+    </file>
+    <summary>
+      pass
+    </summary>
+  </report>
+  <total>
+    pass
+    <details>
+      <pass>1</pass>
+      <warning>0</warning>
+      <fail>0</fail>
+    </details>
+  </total>
+  <version>
+    170323 built with LASread version 1.1 (170323)
+  </version>
+  <command_line>
+    Z:\storage\lidar\LAStools\bin\lasvalidate.exe -i /storage/lidar/Swinomish_Lidar_2016/source/q48122D5410.laz 
+  </command_line>
+</LASvalidator>
