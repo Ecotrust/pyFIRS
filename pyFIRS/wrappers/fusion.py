@@ -80,17 +80,29 @@ class useFUSION(object):
                 proc = subprocess.run('WINEPREFIX={} wine {}.exe {} {}'.format(wine_prefix, cmd, ' '.join(switches), ' '.join(params)),
                        stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             else: # no wine_prefix defined
-                proc = subprocess.run(['wine', cmd+'.exe', *switches, *params],
+                try:
+                    proc = subprocess.run(['wine', cmd + '.exe', *switches, *params],
+                                          stderr = subprocess.PIPE,
+                                          stdout = subprocess.PIPE)
+                except OSError: # we're probably running Windows Subsystem for Linux
+                # or don't have wine installed
+                    proc = subprocess.run([cmd + '.exe', *switches, *params],
+                                          stderr = subprocess.PIPE,
+                                          stdout = subprocess.PIPE)
+
+        else:
+            proc = subprocess.run([cmd + '.exe', *switches, *params],
                                   stderr = subprocess.PIPE,
                                   stdout = subprocess.PIPE)
-        else:
-            proc = subprocess.run([cmd, *switches, *params],
-                                       stderr = subprocess.PIPE,
-                                       stdout = subprocess.PIPE)
 
         if echo:
             print(proc.stdout.decode())
             print(proc.stderr.decode())
+
+        if proc.returncode != 0:
+            cmd_name = os.path.basename(cmd)
+            raise RuntimeError('''{} failed on "{}" with the following error message
+                {}'''.format(cmd_name, kwargs['i'], proc.stderr.decode()))
 
         return proc
 

@@ -109,16 +109,28 @@ class LAStools_base(object):
                 proc = subprocess.run('WINEPREFIX={} wine {}.exe {}'.format(wine_prefix, cmd, ' '.join(kws)),
                        stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             else: # no wine_prefix defined
-                proc = subprocess.run(['wine', cmd+'.exe', *kws],
-                                  stderr = subprocess.PIPE,
-                                  stdout = subprocess.PIPE)
+                try:
+                    proc = subprocess.run(['wine', cmd+ '.exe', *kws],
+                                          stderr = subprocess.PIPE,
+                                          stdout = subprocess.PIPE)
+                except OSError: # we're probably running Windows Subsystem for Linux
+                # or don't have wine installed
+                    proc = subprocess.run([cmd + '.exe', *kws],
+                                          stderr = subprocess.PIPE,
+                                          stdout = subprocess.PIPE)
+
         else: # we're not on a Linux machine, use windows executable directly
-            proc = subprocess.run([cmd, *kws],
+            proc = subprocess.run([cmd + '.exe', *kws],
                                   stderr = subprocess.PIPE,
                                   stdout = subprocess.PIPE)
         if echo:
             print(proc.stdout.decode())
             print(proc.stderr.decode())
+
+        if proc.returncode != 0:
+            cmd_name = os.path.basename(cmd)
+            raise RuntimeError('''{} failed on "{}" with the following error message
+                {}'''.format(cmd_name, kwargs['i'], proc.stderr.decode()))
 
         return proc
 
