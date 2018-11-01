@@ -73,3 +73,5 @@ dist
 examples/.ipynb_checkpoints
 pyFIRS.egg_info/*
 pyFIRS.egg_info
+dask-worker-space/*
+file_name_list*
