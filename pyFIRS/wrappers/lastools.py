@@ -7,6 +7,10 @@ import urllib.request
 import geopandas as gpd
 import numpy as np
 
+class PipelineError(RuntimeError):
+    def __init__(self, message):
+        self.message = message
+
 # helper function for formatting command line arguments
 def format_lastools_kws(**kwargs):
     '''Formats keyword arguments for LAStools command line usage.'''
@@ -129,8 +133,8 @@ class LAStools_base(object):
 
         if proc.returncode != 0:
             cmd_name = os.path.basename(cmd)
-            error_msg = proc.stderr.decode().split('\\r')[0]
-            raise RuntimeError('''{} failed on "{}" with the following error message
+            error_msg = proc.stderr.decode().split('\r')[0]
+            raise PipelineError('''{} failed on "{}" with the following error message
                 {}'''.format(cmd_name, kwargs['i'], error_msg))
 
         return proc
