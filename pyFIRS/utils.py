@@ -8,6 +8,11 @@ from tqdm.autonotebook import tqdm
 import time
 import ipyparallel as ipp
 
+
+class PipelineError(RuntimeError):
+    def __init__(self, message):
+        self.message = message
+
 def listlike(arg):
     '''Checks whether an argument is list-like, returns boolean'''
     return not hasattr(arg, "strip") and (hasattr(arg, "__getitem__") or

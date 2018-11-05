@@ -2,14 +2,11 @@ import os
 import subprocess
 import platform
 import shutil
-from pyFIRS.utils import listlike
+from pyFIRS.utils import listlike, PipelineError
 import urllib.request
 import geopandas as gpd
 import numpy as np
 
-class PipelineError(RuntimeError):
-    def __init__(self, message):
-        self.message = message
 
 # helper function for formatting command line arguments
 def format_lastools_kws(**kwargs):
