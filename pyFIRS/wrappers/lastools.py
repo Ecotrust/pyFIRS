@@ -129,8 +129,9 @@ class LAStools_base(object):
 
         if proc.returncode != 0:
             cmd_name = os.path.basename(cmd)
+            error_msg = proc.stderr.decode().split('\\r')[0]
             raise RuntimeError('''{} failed on "{}" with the following error message
-                {}'''.format(cmd_name, kwargs['i'], proc.stderr.decode()))
+                {}'''.format(cmd_name, kwargs['i'], error_msg))
 
         return proc
 
