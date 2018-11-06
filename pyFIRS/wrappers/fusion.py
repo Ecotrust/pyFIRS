@@ -1971,7 +1971,7 @@ class useFUSION(object):
             )
 
         cmd = 'gridmetrics'
-        params = [groundfile, heightbreak, cellsize, outputfile, datafile]
+        params = [groundfile, heightbreak, cellsize, outputfile, datafiles]
         self.run(cmd, *params, **kwargs)
 
     def gridsample(self, gridfile, inputfile, outputfile, windowsize, **kwargs):
