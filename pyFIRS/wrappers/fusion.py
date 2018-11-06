@@ -2,7 +2,7 @@ import os
 import subprocess
 import platform
 import warnings
-from pyFIRS.utils import listlike
+from pyFIRS.utils import listlike, PipelineError
 
 # helper functions for formatting command line arguments
 def format_fusion_kws(**kwargs):
@@ -101,8 +101,9 @@ class useFUSION(object):
 
         if proc.returncode != 0:
             cmd_name = os.path.basename(cmd)
-            raise RuntimeError('''{} failed on "{}" with the following error message
-                {}'''.format(cmd_name, kwargs['i'], proc.stderr.decode()))
+            error_msg = proc.stderr.decode()
+            raise PipelineError('''{} failed on "{}" with the following error message
+                {}'''.format(cmd_name, kwargs['i'], error_msg))
 
         return proc
 
