@@ -102,8 +102,8 @@ class useFUSION(object):
         if proc.returncode != 0:
             cmd_name = os.path.basename(cmd)
             error_msg = proc.stderr.decode()
-            raise PipelineError('''{} failed on "{}" with the following error message
-                {}'''.format(cmd_name, kwargs['i'], error_msg))
+            raise PipelineError('''{} failed on with the following error message
+                {}'''.format(cmd_name, error_msg))
 
         return proc
 
