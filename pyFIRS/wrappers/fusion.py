@@ -976,11 +976,11 @@ class useFUSION(object):
             the mean and cover above the mode) default is to use only first
             returns when computing density.
         """
-        if kwargs['relcover']:
+        if 'relcover' in kwargs:
             warnings.warn("""relcover is obsolete as of CloudMetrics version
             2.0. Metrics are computed as part of the default set of metrics.""",
             DeprecationWarning)
-        if kwargs['alldensity']:
+        if 'alldensity' in kwargs:
             warnings.warn("""alldensity is obsolete as of CloudMetrics version
             2.0. Metrics are computed as part of the default set of metrics.""",
             DeprecationWarning)
@@ -1958,7 +1958,7 @@ class useFUSION(object):
         quiet, verbose, newlog, version, locale, nolaszipdll
         -------
         """
-        if kwargs['raster']:
+        if 'raster' in kwargs:
             warnings.warn(
             """It is likely that the /raster option will be removed at some
             point. The amount of code required to implement this option is quite
