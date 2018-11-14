@@ -247,3 +247,102 @@ def setup_cluster():
 
     print('Viewing {} workers in the cluster.'.format(len(rc.ids)))
     return rc, dv, v
+
+def validation_summary(xml_dir, verbose=False):
+    '''
+    Generates a summary of validation results for a directory of lidar files
+
+    Parameters
+    ----------
+    xml_dir : string, path to directory
+        directory containing xml files produced by LASvalidate
+    verbose : boolean
+        whether or not to include the messages describing why any files
+        produced warning or failed validation.
+
+    Returns
+    -------
+    summary_report : a printed report
+    '''
+    xmls = glob.glob(os.path.join(xml_dir, '*.xml'))
+    passed = 0
+    warnings = 0
+    failed = 0
+    parse_errors = 0
+    warning_messages = []
+    failed_messages = []
+
+    for validation_report in xmls:
+        try:
+            tile_id = os.path.basename(validation_report).split('.')[0]
+            tree = ET.parse(validation_report)
+            root = tree.getroot()
+            result = root.find('report').find('summary').text.strip()
+            if result == 'pass':
+                passed += 1
+            else:
+                variable = root.find('report').find('details').find(result).find('variable').text
+                note = root.find('report').find('details').find(result).find('note').text
+                if result == 'fail':
+                    failed += 1
+                    failed_messages.append('{} -> {} | {} : {}'.format(tile_id, result, variable, note))
+                elif result == 'warning':
+                    warnings +=1
+                    warning_messages.append('{} -> {} | {} : {}'.format(tile_id, result, variable, note))
+        except ParseError:
+            parse_errors += 1
+
+    summary = '''LASvalidate Summary
+====================
+Passed: {:,d}
+Failed: {:,d}
+Warnings: {:,d}
+ParseErrors: {:,d}
+'''.format(passed, failed, warnings, parse_errors)
+
+    details = '''Details
+========
+{}
+{}
+'''.format('\n'.join(failed_messages), '\n'.join(warning_messages))
+
+    print(summary)
+    if verbose:
+        print(details)
+
+
+def move_invalid_tiles(xml_dir, dest_dir):
+    '''Moves lidar data that fail validation checks into a new directory
+
+    Parameters
+    ----------
+    xml_dir : string, path to directory
+        where the xml reports produced by LASvalidate can be found
+    dest_dir : str, path to directory
+        where you would like the point cloud and associated files to be moved
+
+    Returns
+    -------
+    A printed statement about how many tiles were moved.
+    '''
+
+    xmls = glob.glob(os.path.join(xml_dir, '*.xml'))
+    invalid_dir = dest_dir
+
+    num_invalid = 0
+
+    for validation_report in xmls:
+        tile_id = os.path.basename(validation_report).split('.')[0]
+        tree = ET.parse(validation_report)
+        root = tree.getroot()
+        result = root.find('report').find('summary').text.strip()
+
+        if result == 'fail':
+            # move the lidar file to a different folder
+            os.makedirs(invalid_dir, exist_ok=True)
+            for invalid_file in glob.glob(os.path.join(raw, tile_id + '*')):
+                basename = os.path.basename(invalid_file)
+                os.rename(invalid_file, os.path.join(invalid_dir, basename))
+
+            num_invalid += 1
+    print('Moved files for {} invalid tiles to {}'.format(num_invalid, invalid_dir))
