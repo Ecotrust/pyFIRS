@@ -4,60 +4,18 @@ import glob
 import geopandas as gpd
 import rasterio
 import numpy as np
-from tqdm.autonotebook import tqdm
-import time
-import ipyparallel as ipp
 
 
 class PipelineError(RuntimeError):
     def __init__(self, message):
         self.message = message
 
+
 def listlike(arg):
     '''Checks whether an argument is list-like, returns boolean'''
     return not hasattr(arg, "strip") and (hasattr(arg, "__getitem__") or
             hasattr(arg, "__iter__"))
 
-def timefmt(seconds):
-    '''Formats a time given in seconds in human-readable format.'''
-    m, s = divmod(seconds, 60)
-    h, m = divmod(m, 60)
-    return '{:.0f} hrs, {:.0f} min, {:.1f} sec'.format(h,m,s)
-
-def run_speed(res):
-    '''Reports time spent processing jobs using ipyparallel.
-
-    Parameters (required)
-    ----------
-    res: an ipyparallel AsyncResult object
-        Produced, for example, when you map a function to a list of inputs,
-        as in `res = view.map_async(my_func, inputs)`
-    '''
-    print('Human time spent:', timefmt(res.wall_time))
-    print('Computer time spent:', timefmt(res.serial_time))
-    print('Parallel speedup:', '{:.2f}x'.format(res.serial_time/res.wall_time))
-    print('Human time per job:', '{:.2f} sec'.format(res.wall_time/res.progress))
-    print('Computer time per job:', '{:.2f} sec'.format(res.serial_time/res.progress))
-
-def pbar(res):
-    '''Creates a progress bar using TQDM.
-
-    Parameters
-    ----------
-    res: AsyncResult object
-        result from mapping a function to a view using `ipyparallel`, for
-        example, from `res = view.map_async(my_func, inputs)`
-    '''
-    jobs_done = res.progress
-    with tqdm(total=len(res), initial=jobs_done, desc='Progress', unit='tile') as pbar:
-        while not res.ready():
-            new_progress = res.progress - jobs_done
-            jobs_done += new_progress
-            pbar.update(new_progress)
-            time.sleep(0.5)
-        # once jobs are completed (i.e., res.ready() returns True)
-        # update the progress bar one last time
-        pbar.update(len(res)-jobs_done)
 
 def clean_dir(dir_to_clean, file_extensions):
     '''Deletes files with specified extension(s) from a directory.
@@ -87,6 +45,7 @@ def clean_dir(dir_to_clean, file_extensions):
         print("Removed {:,d} files with extension {}.".format(len(to_rem),ext))
     else:
         raise(TypeError, 'file_extensions needs to be a string or list-like of strings.')
+
 
 def clean_buffer_polys(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None):
     """Removes polygons within the buffer zone of a tile.
@@ -136,6 +95,7 @@ def clean_buffer_polys(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None)
     if len(clean_polys) > 0:
         clean_polys.to_file(outfile)
 
+
 def clip_tile_from_shp(in_raster, in_shp, odir):
     '''Clips a raster image to the bounding box of a shapefile.
 
@@ -170,6 +130,7 @@ def clip_tile_from_shp(in_raster, in_shp, odir):
     proc_clip = subprocess.run(['rio', 'clip', in_raster, outfile, '--bounds', tile_bnds],
                                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     return proc_clip
+
 
 def convert_project(infile, to_fmt, crs):
     '''Converts a raster to another format and specifies its projection.
@@ -209,44 +170,6 @@ def convert_project(infile, to_fmt, crs):
                                   stdout=subprocess.PIPE)
     return proc_convert, proc_project
 
-def setup_cluster():
-    '''Sets up framework for executing parallel jobs using ipyparallel.
-
-    This function imports pyFIRS and other relevant packages to the workers in
-    the cluster.
-
-    This assumes a cluster has already been started. You can start a cluster
-    from the command line (or using jupyter notebook magics) using:
-    `> ipcluster start -n {num_cores}`
-    replacing {num_cores} with the number of separate processes you want to have
-    running. Alternatively, if you are using `ipyparallel` version >= 4.0 and
-    are using a Jupyter Notebook, you should find a tab when you first launch
-    jupyter where you can start/stop IPython clusters.
-
-    Returns
-    -------
-    rc: Client
-        ipyparallel Client
-    dv: DirectView
-        ipyparallel DirectView object
-    v: LoadBalancedView
-        ipyparallel LoadBalancedVIew object
-    '''
-    rc = ipp.Client()
-    dv = rc[:] # direct view of the workers
-    v = rc.load_balanced_view() # load-balanced view of the workers
-
-    # import the relevant packages to all the workers
-    with dv.sync_imports():
-        import subprocess
-        import os
-        from pyFIRS.wrappers import lastools
-        from pyFIRS.wrappers import fusion
-        import rasterio
-        from pyFIRS.utils import clip_tile_from_shp, convert_project
-
-    print('Viewing {} workers in the cluster.'.format(len(rc.ids)))
-    return rc, dv, v
 
 def validation_summary(xml_dir, verbose=False):
     '''

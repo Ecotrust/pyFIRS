@@ -8,8 +8,6 @@ dependencies:
   - numpy
   - rasterio
   - geopandas
-  - ipyparallel
-  - tqdm
   - open3d
   - pip:
     - laspy
