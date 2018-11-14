@@ -1,6 +1,8 @@
 import os
 import subprocess
 import glob
+import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import ParseError
 import geopandas as gpd
 import rasterio
 import numpy as np
