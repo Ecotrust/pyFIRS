@@ -265,7 +265,7 @@ def move_invalid_tiles(xml_dir, dest_dir):
         if result == 'fail':
             # move the lidar file to a different folder
             os.makedirs(invalid_dir, exist_ok=True)
-            for invalid_file in glob.glob(os.path.join(raw, tile_id + '*')):
+            for invalid_file in glob.glob(os.path.join(xml_dir, tile_id + '*')):
                 basename = os.path.basename(invalid_file)
                 os.rename(invalid_file, os.path.join(invalid_dir, basename))
 
