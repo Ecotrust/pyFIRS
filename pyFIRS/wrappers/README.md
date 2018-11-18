@@ -1,4 +1,4 @@
-# Thin Pythonic Wrappers for Lidar Processing Command Line Tools
+# Wrappers for Lidar Processing Command Line Tools
 The lidar processing components in this toolkit currently are thin wrappers around executables available in the [LAStools](https://rapidlasso.com/lastools/) and [FUSION](http://forsys.cfr.washington.edu/fusion/fusionlatest.html) software packages. These wrappers allow you to specify calls to command line tools from these software distributions with Pythonic syntax, with underlying executing carried out using the Python subprocess module.
 
 The command line tools from these software packages are available at the links above and are not distributed with the PyFIRS package or governed by the PyFIRS license.
