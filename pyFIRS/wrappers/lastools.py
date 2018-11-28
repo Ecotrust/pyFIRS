@@ -24,37 +24,42 @@ def format_lastools_kws(**kwargs):
             kws.append(str(value))
     return kws
 
+
 class LAStools_base(object):
     "A class for executing LAStools functions as methods"
 
-    def __init__(self,src='C:\\lastools\\bin'):
+    def __init__(self, src='C:\\lastools\\bin'):
         "Initialize with a path to the LAStools executables"
         self.src = src
         self.system = platform.system()
 
         # retrieve the documentation for each LAStool from the web
-        tools = [self.lasview.__func__, self.lasinfo.__func__,
-                 self.lasground.__func__, self.lasclassify.__func__,
-                 self.las2dem.__func__, self.las2iso.__func__,
-                 self.lascolor.__func__, self.lasgrid.__func__,
-                 self.lasoverlap.__func__, self.lasoverage.__func__,
-                 self.lasboundary.__func__, self.lasclip.__func__,
-                 self.lasheight.__func__, self.lastrack.__func__,
-                 self.lascanopy.__func__, self.lasthin.__func__,
-                 self.lassort.__func__, self.lasduplicate.__func__,
-                 self.lascontrol.__func__, self.lastile.__func__,
-                 self.lassplit.__func__, self.txt2las.__func__,
-                 self.las2dem.__func__, self.las2iso.__func__,
-                 self.las2las.__func__, self.las2shp.__func__,
-                 self.las2tin.__func__, self.lasvoxel.__func__,
-                 self.lasreturn.__func__, self.laszip.__func__,
-                 self.lasindex.__func__, self.lasvalidate.__func__]
+        tools = [
+            self.lasview.__func__, self.lasinfo.__func__,
+            self.lasground.__func__, self.lasclassify.__func__,
+            self.las2dem.__func__, self.las2iso.__func__,
+            self.lascolor.__func__, self.lasgrid.__func__,
+            self.lasoverlap.__func__, self.lasoverage.__func__,
+            self.lasboundary.__func__, self.lasclip.__func__,
+            self.lasheight.__func__, self.lastrack.__func__,
+            self.lascanopy.__func__, self.lasthin.__func__,
+            self.lassort.__func__, self.lasduplicate.__func__,
+            self.lascontrol.__func__, self.lastile.__func__,
+            self.lassplit.__func__, self.txt2las.__func__,
+            self.las2dem.__func__, self.las2iso.__func__,
+            self.las2las.__func__, self.las2shp.__func__,
+            self.las2tin.__func__, self.lasvoxel.__func__,
+            self.lasreturn.__func__, self.laszip.__func__,
+            self.lasindex.__func__, self.lasvalidate.__func__
+        ]
 
         for tool in tools:
             name = tool.__name__
-            URL = "http://www.cs.unc.edu/~isenburg/laszip/download/{}_README.txt".format(name)
+            URL = "http://www.cs.unc.edu/~isenburg/laszip/download/{}_README.txt".format(
+                name)
             try:
-                docstring = urllib.request.urlopen(URL).read().decode('utf-8', 'ignore')
+                docstring = urllib.request.urlopen(URL).read().decode(
+                    'utf-8', 'ignore')
             except:
                 print('Error retrieving docstring for {}'.format(name))
                 docstring = URL
@@ -106,24 +111,28 @@ class LAStools_base(object):
 
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
-            if wine_prefix: # if we're using specific WINE server
-                proc = subprocess.run('WINEPREFIX={} wine {}.exe {}'.format(wine_prefix, cmd, ' '.join(kws)),
-                       stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-            else: # no wine_prefix defined
+            if wine_prefix:  # if we're using specific WINE server
+                proc = subprocess.run(
+                    'WINEPREFIX={} wine {}.exe {}'.format(
+                        wine_prefix, cmd, ' '.join(kws)),
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    shell=True)
+            else:  # no wine_prefix defined
                 try:
-                    proc = subprocess.run(['wine', cmd+ '.exe', *kws],
-                                          stderr = subprocess.PIPE,
-                                          stdout = subprocess.PIPE)
-                except OSError: # we're probably running Windows Subsystem for Linux
-                # or don't have wine installed
+                    proc = subprocess.run(['wine', cmd + '.exe', *kws],
+                                          stderr=subprocess.PIPE,
+                                          stdout=subprocess.PIPE)
+                except OSError:  # we're probably running Windows Subsystem for Linux
+                    # or don't have wine installed
                     proc = subprocess.run([cmd + '.exe', *kws],
-                                          stderr = subprocess.PIPE,
-                                          stdout = subprocess.PIPE)
+                                          stderr=subprocess.PIPE,
+                                          stdout=subprocess.PIPE)
 
-        else: # we're not on a Linux machine, use windows executable directly
+        else:  # we're not on a Linux machine, use windows executable directly
             proc = subprocess.run([cmd + '.exe', *kws],
-                                  stderr = subprocess.PIPE,
-                                  stdout = subprocess.PIPE)
+                                  stderr=subprocess.PIPE,
+                                  stdout=subprocess.PIPE)
         if echo:
             print(proc.stdout.decode())
             print(proc.stderr.decode())
@@ -131,7 +140,8 @@ class LAStools_base(object):
         if proc.returncode != 0:
             cmd_name = os.path.basename(cmd)
             error_msg = proc.stderr.decode().split('\r')[0]
-            raise PipelineError('''{} failed on "{}" with the following error message
+            raise PipelineError(
+                '''{} failed on "{}" with the following error message
                 {}'''.format(cmd_name, kwargs['i'], error_msg))
 
         return proc
@@ -288,16 +298,17 @@ def get_bounds(lasinfo):
     '''
     min_start = lasinfo.index('min x y z:')
     min_stop = lasinfo.index('\r\n', min_start)
-    min_line = lasinfo[min_start: min_stop]
+    min_line = lasinfo[min_start:min_stop]
     min_vals = min_line.split(':')[1].strip().split(' ')
     mins = (float(min_vals[0]), float(min_vals[1]), float(min_vals[2]))
 
     max_start = lasinfo.index('max x y z:', min_stop)
     max_stop = lasinfo.index('\r\n', max_start)
-    max_line = lasinfo[max_start: max_stop]
+    max_line = lasinfo[max_start:max_stop]
     max_vals = max_line.split(':')[1].strip().split(' ')
     maxs = (float(max_vals[0]), float(max_vals[1]), float(max_vals[2]))
     return mins + maxs
+
 
 class useLAStools(LAStools_base):
     """A class which inherits the command-line tools from LAStools_base and
@@ -305,9 +316,18 @@ class useLAStools(LAStools_base):
     these lower-level commands and which may integrate some Python processing.
     """
 
-    def pitfree(self, lasfile, outdir, units, xy_res=None, z_res=None,
-                      splat_radius=None, max_TIN_edge=None, blast=False,
-                      cleanup=True, echo=False, wine_prefix=None):
+    def pitfree(self,
+                lasfile,
+                outdir,
+                units,
+                xy_res=None,
+                z_res=None,
+                splat_radius=None,
+                max_TIN_edge=None,
+                blast=False,
+                cleanup=True,
+                echo=False,
+                wine_prefix=None):
         '''Creates a pit-free Canopy Height Model from a lidar point cloud.
 
         This function chains together several LAStools command line tools to
@@ -382,20 +402,20 @@ class useLAStools(LAStools_base):
 
         # run lasheight to normalize point cloud
         odir = os.path.join(tmpdir, 'normalized')
-        proc_height = self.lasheight(i=path_to_file,
-                       odir=odir,
-                       olaz=True,
-                       replace_z=True,
-                       keep_class=(1,2,5),
-                       drop_below=-0.1, # drop points below the ground
-                       echo=echo,
-                       wine_prefix=wine_prefix)
+        proc_height = self.lasheight(
+            i=path_to_file,
+            odir=odir,
+            olaz=True,
+            replace_z=True,
+            keep_class=(1, 2, 5),
+            drop_below=-0.1,  # drop points below the ground
+            echo=echo,
+            wine_prefix=wine_prefix)
 
         # get the minimum and maximum normalized heights
         # we'll use these later for creating layered canopy height models
-        infile = os.path.join(tmpdir,'normalized','*.laz')
-        info_proc = self.lasinfo(i=infile,
-                                 wine_prefix=wine_prefix)
+        infile = os.path.join(tmpdir, 'normalized', '*.laz')
+        info_proc = self.lasinfo(i=infile, wine_prefix=wine_prefix)
         lasinfo = info_proc.stderr.decode()
         _, _, zmin, _, _, zmax = get_bounds(lasinfo)
 
@@ -409,7 +429,7 @@ class useLAStools(LAStools_base):
                 splat_radius = 0.1
             if not max_TIN_edge:
                 max_TIN_edge = 1.0
-            hts = [0.0,2.0] + [x for x in np.arange(5.0,zmax,z_res)]
+            hts = [0.0, 2.0] + [x for x in np.arange(5.0, zmax, z_res)]
         elif units.lower() in ('f', 'ft', 'feet'):
             if not xy_res:
                 xy_res = 1.0
@@ -420,47 +440,50 @@ class useLAStools(LAStools_base):
             if not max_TIN_edge:
                 max_TIN_edge = 1.0  # blast2dem converts from meters to feet
                 # so we use the same value for meters or feet
-            hts = [0.0, 6.56168] + [x for x in np.arange(16.4042,zmax,z_res).tolist()]
+            hts = [0.0, 6.56168
+                   ] + [x for x in np.arange(16.4042, zmax, z_res).tolist()]
         else:
             raise ValueError('{} is not recognized units'.format(units))
 
-
         # create DEM of ground for minimum value of pitfree CHM
-        infile = os.path.join(tmpdir, 'normalized', '*.laz') # *_height.laz
+        infile = os.path.join(tmpdir, 'normalized', '*.laz')  # *_height.laz
         odir = os.path.join(tmpdir, 'chm_layers')
         odix = '_chm_ground'
         if blast:
-            proc_dem1 = self.blast2dem(i=infile,
-                                       odir=odir,
-                                       odix=odix,
-                                       obil=True,
-                                       drop_z_above=0.1,
-                                       step=xy_res,  # resolution of ground model
-                                       use_tile_bb=True, # trim the tile buffers
-                                       echo=echo,
-                                       wine_prefix=wine_prefix)
+            proc_dem1 = self.blast2dem(
+                i=infile,
+                odir=odir,
+                odix=odix,
+                obil=True,
+                drop_z_above=0.1,
+                step=xy_res,  # resolution of ground model
+                use_tile_bb=True,  # trim the tile buffers
+                echo=echo,
+                wine_prefix=wine_prefix)
         else:
-            proc_dem1 = self.las2dem(i=infile,
-                                     odir=odir,
-                                     odix=odix,
-                                     obil=True,
-                                     drop_z_above=0.1,
-                                     step=xy_res,  # resolution of ground model
-                                     use_tile_bb=True, # trim the tile buffers
-                                     echo=echo,
-                                     wine_prefix=wine_prefix)
+            proc_dem1 = self.las2dem(
+                i=infile,
+                odir=odir,
+                odix=odix,
+                obil=True,
+                drop_z_above=0.1,
+                step=xy_res,  # resolution of ground model
+                use_tile_bb=True,  # trim the tile buffers
+                echo=echo,
+                wine_prefix=wine_prefix)
         # "splat" and thin the lidar point cloud to get highest points using a
         # finer resolution than our final CHM will be
-        infile = os.path.join(tmpdir, 'normalized', '*.laz') # *_height.laz
+        infile = os.path.join(tmpdir, 'normalized', '*.laz')  # *_height.laz
         odir = os.path.join(tmpdir, 'splatted')
-        proc_thin = self.lasthin(i=infile,
-                                 odir=odir,
-                                 olaz=True,
-                                 highest=True,
-                                 subcircle=splat_radius,
-                                 step=xy_res/2.0,
-                                 echo=echo,
-                                 wine_prefix=wine_prefix)
+        proc_thin = self.lasthin(
+            i=infile,
+            odir=odir,
+            olaz=True,
+            highest=True,
+            subcircle=splat_radius,
+            step=xy_res / 2.0,
+            echo=echo,
+            wine_prefix=wine_prefix)
 
         # using the "splatted" lidar point cloud, generate CHM layers above
         # ground, above 2m, and then in 5m increments up to zmax...
@@ -473,45 +496,49 @@ class useLAStools(LAStools_base):
             odix = '_chm_{:02d}_{:03d}'.format(i, int(ht))
             odir = os.path.join(tmpdir, 'chm_layers')
             if blast:
-                proc_dem2 = self.blast2dem(i=infile,
-                                           odir=odir,
-                                           odix=odix,
-                                           obil=True,
-                                           drop_z_below=ht, # specify layer height from ground
-                                           kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
-                                           step=xy_res,  # resolution of layer DEM
-                                           use_tile_bb=True, # trim tile buffer
-                                           echo=echo,
-                                           wine_prefix=wine_prefix)
+                proc_dem2 = self.blast2dem(
+                    i=infile,
+                    odir=odir,
+                    odix=odix,
+                    obil=True,
+                    drop_z_below=ht,  # specify layer height from ground
+                    kill=max_TIN_edge,  # trim edges in TIN > max_TIN_edge
+                    step=xy_res,  # resolution of layer DEM
+                    use_tile_bb=True,  # trim tile buffer
+                    echo=echo,
+                    wine_prefix=wine_prefix)
             else:
-                proc_dem2 = self.las2dem(i=infile,
-                                         odir=odir,
-                                         odix=odix,
-                                         obil=True,
-                                         drop_z_below=ht, # specify layer height from ground
-                                         kill=max_TIN_edge, # trim edges in TIN > max_TIN_edge
-                                         step=xy_res,  # resolution of layer DEM
-                                         use_tile_bb=True, # trim tile buffer
-                                         echo=echo,
-                                         wine_prefix=wine_prefix)
+                proc_dem2 = self.las2dem(
+                    i=infile,
+                    odir=odir,
+                    odix=odix,
+                    obil=True,
+                    drop_z_below=ht,  # specify layer height from ground
+                    kill=max_TIN_edge,  # trim edges in TIN > max_TIN_edge
+                    step=xy_res,  # resolution of layer DEM
+                    use_tile_bb=True,  # trim tile buffer
+                    echo=echo,
+                    wine_prefix=wine_prefix)
             dem2_procs.append(proc_dem2)
 
         # merge the CHM layers into a single pit free CHM raster
         infiles = os.path.join(tmpdir, 'chm_layers', '*.bil')
         outfile = basename + '_chm_pitfree.bil'
-        proc_grid = self.lasgrid(i=infiles,
-                                 merged=True,
-                                 o=outfile,
-                                 odir=outdir,
-                                 highest=True,
-                                 step=xy_res, # resolution of pit-free CHM
-                                 echo=echo,
-                                 wine_prefix=wine_prefix)
+        proc_grid = self.lasgrid(
+            i=infiles,
+            merged=True,
+            o=outfile,
+            odir=outdir,
+            highest=True,
+            step=xy_res,  # resolution of pit-free CHM
+            echo=echo,
+            wine_prefix=wine_prefix)
 
         if cleanup:
             shutil.rmtree(tmpdir)
 
         return (proc_height, proc_dem1, proc_thin, dem2_procs, proc_grid)
+
 
 # def clean_buffer_polys(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None):
 #     """Removes polygons within the buffer zone of a tile.

@@ -4,37 +4,40 @@ import platform
 import warnings
 from pyFIRS.utils import listlike, PipelineError
 
+
 # helper functions for formatting command line arguments
 def format_fusion_kws(**kwargs):
     '''Formats keyword arguments for FUSION command line usage.'''
     kws = []
     for key, value in kwargs.items():
         # catch and replace kwarg names python doesn't like (class, ascii)
-        if key == 'las_class': # can't specify 'class' as a kwarg
+        if key == 'las_class':  # can't specify 'class' as a kwarg
             key = 'class'
-        if key == 'asc': # can't specify 'ascii' as a kwarg
+        if key == 'asc':  # can't specify 'ascii' as a kwarg
             key = 'ascii'
 
         if isinstance(value, bool):
             kws.append('/{}'.format(key))
         elif listlike(value):
-            kws.append('/{}:'.format(key)+','.join(str(x) for x in value))
+            kws.append('/{}:'.format(key) + ','.join(str(x) for x in value))
         else:
-            kws.append('/{}:'.format(key)+str(value).replace('/','\\'))
+            kws.append('/{}:'.format(key) + str(value).replace('/', '\\'))
     return kws
+
 
 def format_fusion_args(arg):
     '''Formats positional arguments for FUSION command line usage'''
     if listlike(arg):
         return " ".join(str(x) for x in arg)
     else:
-        return str(arg).replace('/','\\')
+        return str(arg).replace('/', '\\')
+
 
 # Pythonic wrappers for FUSION command line tools
 class useFUSION(object):
     "A class for executing FUSION functions as methods"
 
-    def __init__(self,src='C:\\FUSION'):
+    def __init__(self, src='C:\\FUSION'):
         "Initialize with a path to the FUSION executables"
         self.src = src
         self.system = platform.system()
@@ -70,30 +73,34 @@ class useFUSION(object):
         # format the required parameters for each function as strings
         params = [format_fusion_args(param) for param in params]
 
-
-
         cmd = os.path.join(self.src, cmd)
 
         if self.system == 'Linux':
             # if we're on a linux system, execute the commands using WINE
-            if wine_prefix: # if we're using specific WINE server
-                proc = subprocess.run('WINEPREFIX={} wine {}.exe {} {}'.format(wine_prefix, cmd, ' '.join(switches), ' '.join(params)),
-                       stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-            else: # no wine_prefix defined
+            if wine_prefix:  # if we're using specific WINE server
+                proc = subprocess.run(
+                    'WINEPREFIX={} wine {}.exe {} {}'.format(
+                        wine_prefix, cmd, ' '.join(switches),
+                        ' '.join(params)),
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    shell=True)
+            else:  # no wine_prefix defined
                 try:
-                    proc = subprocess.run(['wine', cmd + '.exe', *switches, *params],
-                                          stderr = subprocess.PIPE,
-                                          stdout = subprocess.PIPE)
-                except OSError: # we're probably running Windows Subsystem for Linux
-                # or don't have wine installed
+                    proc = subprocess.run(
+                        ['wine', cmd + '.exe', *switches, *params],
+                        stderr=subprocess.PIPE,
+                        stdout=subprocess.PIPE)
+                except OSError:  # we're probably running Windows Subsystem for Linux
+                    # or don't have wine installed
                     proc = subprocess.run([cmd + '.exe', *switches, *params],
-                                          stderr = subprocess.PIPE,
-                                          stdout = subprocess.PIPE)
+                                          stderr=subprocess.PIPE,
+                                          stdout=subprocess.PIPE)
 
         else:
             proc = subprocess.run([cmd + '.exe', *switches, *params],
-                                  stderr = subprocess.PIPE,
-                                  stdout = subprocess.PIPE)
+                                  stderr=subprocess.PIPE,
+                                  stdout=subprocess.PIPE)
 
         if echo:
             print(proc.stdout.decode())
@@ -102,7 +109,8 @@ class useFUSION(object):
         if proc.returncode != 0:
             cmd_name = os.path.basename(cmd)
             error_msg = proc.stderr.decode()
-            raise PipelineError('''{} failed on with the following error message
+            raise PipelineError(
+                '''{} failed on with the following error message
                 {}'''.format(cmd_name, error_msg))
 
         return proc
@@ -177,10 +185,11 @@ class useFUSION(object):
             input file to correctly parse NAN values (not a number).
         """
         cmd = 'ascii2dtm'
-        params = [surfacefile, xyunits, zunits, coordsys, zone, horizdatum,
-                  vertdatum, gridfile]
+        params = [
+            surfacefile, xyunits, zunits, coordsys, zone, horizdatum,
+            vertdatum, gridfile
+        ]
         self.run(cmd, *params, **kwargs)
-
 
     def asciiimport(self, paramfile, inputfile, outputfile=None, **kwargs):
         """ASCIIImport allows you to use the configuration files that describe
@@ -496,8 +505,10 @@ class useFUSION(object):
         --------
         """
         cmd = 'canopymodel'
-        params = [surfacefile, cellsize, xyunits, zunits, coordsys, zone,
-                  horizdatum, vertdatum, datafiles]
+        params = [
+            surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum,
+            vertdatum, datafiles
+        ]
         self.run(cmd, *params, **kwargs)
 
     def catalog(self, datafile, catalogfile=None, **kwargs):
@@ -642,8 +653,14 @@ class useFUSION(object):
         params = [datafile, catalogfile]
         self.run(cmd, *params, **kwargs)
 
-    def clipdata(self, inputfile, samplefile, xmin=None, ymin=None,
-                 xmax=None, ymax=None, **kwargs):
+    def clipdata(self,
+                 inputfile,
+                 samplefile,
+                 xmin=None,
+                 ymin=None,
+                 xmax=None,
+                 ymax=None,
+                 **kwargs):
         """Creates sub-samples of LIDAR data for various analysis tasks.
 
         The sub-sample can be round or rectangular and can be large or small.
@@ -977,13 +994,15 @@ class useFUSION(object):
             returns when computing density.
         """
         if 'relcover' in kwargs:
-            warnings.warn("""relcover is obsolete as of CloudMetrics version
+            warnings.warn(
+                """relcover is obsolete as of CloudMetrics version
             2.0. Metrics are computed as part of the default set of metrics.""",
-            DeprecationWarning)
+                DeprecationWarning)
         if 'alldensity' in kwargs:
-            warnings.warn("""alldensity is obsolete as of CloudMetrics version
+            warnings.warn(
+                """alldensity is obsolete as of CloudMetrics version
             2.0. Metrics are computed as part of the default set of metrics.""",
-            DeprecationWarning)
+                DeprecationWarning)
 
         cmd = 'cloudmetrics'
         params = [inputfile, outputfile]
@@ -1096,8 +1115,10 @@ class useFUSION(object):
             upperlimit.
         """
         cmd = 'cover'
-        params = [groundfile, coverfile, heightbreak, cellsize, xyunits, zunits,
-                  coordsys, zone, horizdatum, vertdatum, datafile]
+        params = [
+            groundfile, coverfile, heightbreak, cellsize, xyunits, zunits,
+            coordsys, zone, horizdatum, vertdatum, datafile
+        ]
         self.run(cmd, *params, **kwargs)
 
     def csv2grid(self, inputfile, column, outputfile, **kwargs):
@@ -1960,21 +1981,21 @@ class useFUSION(object):
         """
         if 'raster' in kwargs:
             warnings.warn(
-            """It is likely that the /raster option will be removed at some
+                """It is likely that the /raster option will be removed at some
             point. The amount of code required to implement this option is quite
             large and the DTM files produced by the option cannot support
             negative numbers. There are better ways to get individual metrics
             for input into other analyses. For example, you can use the CSV2Grid
             utility to extract specific columns from the .CSV files produced by
             GridMetrics. Use of the /raster option is discouraged.""",
-            PendingDeprecationWarning
-            )
+                PendingDeprecationWarning)
 
         cmd = 'gridmetrics'
         params = [groundfile, heightbreak, cellsize, outputfile, datafiles]
         self.run(cmd, *params, **kwargs)
 
-    def gridsample(self, gridfile, inputfile, outputfile, windowsize, **kwargs):
+    def gridsample(self, gridfile, inputfile, outputfile, windowsize,
+                   **kwargs):
         """Produces a comma separated values (CSV) file that contains values for
         the grid cells surrounding a specific XY location.
 
@@ -2146,8 +2167,10 @@ class useFUSION(object):
             width and height to be multiples of the cell size.
         """
         cmd = 'gridsurfacecreate'
-        params = [surfacefile, cellsize, xyunits, zunits, coordsys, zone,
-                  horizdatum, vertdatum, datafile]
+        params = [
+            surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum,
+            vertdatum, datafile
+        ]
         self.run(cmd, *params, **kwargs)
 
     def gridsurfacestats(self, inputfile, outputfile, samplefactor, **kwargs):
@@ -2624,11 +2647,16 @@ class useFUSION(object):
             Valid for CSV format files only.
         """
         cmd = 'joindb'
-        params = [basefile, basefield, addfile, addfield, startfield,
-                  outputfile]
+        params = [
+            basefile, basefield, addfile, addfield, startfield, outputfile
+        ]
         self.run(cmd, *params, **kwargs)
 
-    def lda2ascii(self, inputfile, outputfile, format, identifier=None,
+    def lda2ascii(self,
+                  inputfile,
+                  outputfile,
+                  format,
+                  identifier=None,
                   noheader=None):
         """Converts LIDAR data files into ASCII text files.
 
@@ -2840,7 +2868,6 @@ class useFUSION(object):
         cmd = 'mergeraster'
         params = [outputfile, inputfile]
         self.run(cmd, *params, **kwargs)
-
 
     def pdq(self, datafile=None, **kwargs):
         """PDQ is a simple, fast data viewer for .LDA, .LAS, and .DTM files.
@@ -3329,8 +3356,9 @@ class useFUSION(object):
         params = [outputhtml, indeximage, tiletemplate]
         self.run(cmd, *params, **kwargs)
 
-    def tinsurfacecreate(self, surfacefile, cellsize, xyunits, zunits, coordsys,
-                         zone, horizdatum, vertdatum, datafiles, **kwargs):
+    def tinsurfacecreate(self, surfacefile, cellsize, xyunits, zunits,
+                         coordsys, zone, horizdatum, vertdatum, datafiles,
+                         **kwargs):
         """Creates a gridded surface model from point data.
 
         The algorithm used in TINSurfaceCreate first creates a TIN surface model
@@ -3420,8 +3448,10 @@ class useFUSION(object):
             Ignore points with the overlap flag set (LAS V1.4+ format)
         """
         cmd = 'tinsurfacecreate'
-        params = [surfacefile, cellsize, xyunits, zunits, coordsys, zone,
-                  horizdatum, vertdatum, datafiles]
+        params = [
+            surfacefile, cellsize, xyunits, zunits, coordsys, zone, horizdatum,
+            vertdatum, datafiles
+        ]
         self.run(cmd, *params, **kwargs)
 
     def topometrics(self, surfacefile, cellsize, topopointspacing, latitude,
@@ -3524,8 +3554,10 @@ class useFUSION(object):
             model will fit in the available memory.
         """
         cmd = 'topometrics'
-        params = [surfacefile, cellsize, topopointspacing, latitude,
-                  tpiwindowsize, outputfile]
+        params = [
+            surfacefile, cellsize, topopointspacing, latitude, tpiwindowsize,
+            outputfile
+        ]
         self.run(cmd, *params, **kwargs)
 
     def treeseg(self, chm, ht_threshold, outputfile, **kwargs):

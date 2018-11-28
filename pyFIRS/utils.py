@@ -15,8 +15,8 @@ class PipelineError(RuntimeError):
 
 def listlike(arg):
     '''Checks whether an argument is list-like, returns boolean'''
-    return not hasattr(arg, "strip") and (hasattr(arg, "__getitem__") or
-            hasattr(arg, "__iter__"))
+    return not hasattr(arg, "strip") and (hasattr(arg, "__getitem__")
+                                          or hasattr(arg, "__iter__"))
 
 
 def clean_dir(dir_to_clean, file_extensions):
@@ -39,17 +39,24 @@ def clean_dir(dir_to_clean, file_extensions):
             to_rem = glob.glob(os.path.join(dir_to_clean, '*{}'.format(ext)))
             for file in to_rem:
                 os.remove(file)
-            print("Removed {:,d} files with extension {}.".format(len(to_rem),ext))
+            print("Removed {:,d} files with extension {}.".format(
+                len(to_rem), ext))
     elif type(file_extension) == str:
         to_rem = glob.glob(os.path.join(dir_to_clean, '*{}'.format(ext)))
         for file in to_rem:
             os.remove(file)
-        print("Removed {:,d} files with extension {}.".format(len(to_rem),ext))
+        print("Removed {:,d} files with extension {}.".format(
+            len(to_rem), ext))
     else:
-        raise(TypeError, 'file_extensions needs to be a string or list-like of strings.')
+        raise (TypeError,
+               'file_extensions needs to be a string or list-like of strings.')
 
 
-def clean_buffer_polys(poly_shp, tile_shp, odir, simp_tol=None, simp_topol=None):
+def clean_buffer_polys(poly_shp,
+                       tile_shp,
+                       odir,
+                       simp_tol=None,
+                       simp_topol=None):
     """Removes polygons within the buffer zone of a tile.
 
     This function removes polygons from a shapefile that fall in the buffered
@@ -129,8 +136,10 @@ def clip_tile_from_shp(in_raster, in_shp, odir):
     os.makedirs(odir, exist_ok=True)
     outfile = os.path.join(odir, basename)
     # clip the raster
-    proc_clip = subprocess.run(['rio', 'clip', in_raster, outfile, '--bounds', tile_bnds],
-                               stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc_clip = subprocess.run(
+        ['rio', 'clip', in_raster, outfile, '--bounds', tile_bnds],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE)
     return proc_clip
 
 
@@ -160,7 +169,7 @@ def convert_project(infile, to_fmt, crs):
     '''
     outdir, basename = os.path.split(infile)
     fname = basename.split('.')[0]
-    outfile = os.path.join(outdir, fname+to_fmt)
+    outfile = os.path.join(outdir, fname + to_fmt)
 
     # convert the file to the new format
     proc_convert = subprocess.run(['rio', 'convert', infile, outfile],
@@ -206,14 +215,18 @@ def validation_summary(xml_dir, verbose=False):
             if result == 'pass':
                 passed += 1
             else:
-                variable = root.find('report').find('details').find(result).find('variable').text
-                note = root.find('report').find('details').find(result).find('note').text
+                variable = root.find('report').find('details').find(
+                    result).find('variable').text
+                note = root.find('report').find('details').find(result).find(
+                    'note').text
                 if result == 'fail':
                     failed += 1
-                    failed_messages.append('{} -> {} | {} : {}'.format(tile_id, result, variable, note))
+                    failed_messages.append('{} -> {} | {} : {}'.format(
+                        tile_id, result, variable, note))
                 elif result == 'warning':
-                    warnings +=1
-                    warning_messages.append('{} -> {} | {} : {}'.format(tile_id, result, variable, note))
+                    warnings += 1
+                    warning_messages.append('{} -> {} | {} : {}'.format(
+                        tile_id, result, variable, note))
         except ParseError:
             parse_errors += 1
 
@@ -265,9 +278,11 @@ def move_invalid_tiles(xml_dir, dest_dir):
         if result == 'fail':
             # move the lidar file to a different folder
             os.makedirs(invalid_dir, exist_ok=True)
-            for invalid_file in glob.glob(os.path.join(xml_dir, tile_id + '*')):
+            for invalid_file in glob.glob(
+                    os.path.join(xml_dir, tile_id + '*')):
                 basename = os.path.basename(invalid_file)
                 os.rename(invalid_file, os.path.join(invalid_dir, basename))
 
             num_invalid += 1
-    print('Moved files for {} invalid tiles to {}'.format(num_invalid, invalid_dir))
+    print('Moved files for {} invalid tiles to {}'.format(
+        num_invalid, invalid_dir))
