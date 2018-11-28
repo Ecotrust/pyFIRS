@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Ecotrust/pyFIRS.svg?branch=master)](https://travis-ci.org/Ecotrust/pyFIRS)
 # pyFIRS
 pyFIRS: A Python-based Forest Information Retrieval System
 
