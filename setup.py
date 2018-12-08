@@ -1,10 +1,9 @@
-from distutils.core import setup
+from setuptools import find_packages, setup
 
 setup(
     name='pyFIRS',
     version='0.1dev',
-    packages=['pyFIRS'],
-    py_modules=['pyFIRS.utils'],
+    packages=find_packages(),
     license='BSD 3-Clause License',
     long_description=open('README.md').read(),
     author='David Diaz',
