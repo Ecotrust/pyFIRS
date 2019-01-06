@@ -105,7 +105,7 @@ def clean_buffer_polys(poly_shp,
         clean_polys.to_file(outfile)
 
 
-def clip_tile_from_shp(in_raster, in_shp, odir):
+def clip_tile_from_shp(in_raster, in_shp, odir, buffer=0):
     '''Clips a raster image to the bounding box of a shapefile.
 
     The input raster will be clipped using a rasterio command line tool. The
@@ -121,6 +121,9 @@ def clip_tile_from_shp(in_raster, in_shp, odir):
         shapefile from which bounding box is calculated to clip the raster
     odir: string, path
         output directory where clipped raster will be stored
+    buffer: numeric
+        additional buffer to add to total bounding box of shapefile when
+        clipping the raster
 
     Returns
     -------
@@ -130,7 +133,7 @@ def clip_tile_from_shp(in_raster, in_shp, odir):
     basename = os.path.basename(in_raster)
     # read the shapefile using geopandas and calculate its bounds
     gdf = gpd.read_file(in_shp)
-    tile_bnds = ' '.join(str(x) for x in gdf.total_bounds)
+    tile_bnds = ' '.join(str(x) for x in gdf.buffer(buffer).total_bounds)
 
     # create the output directory if it doesn't already exist
     os.makedirs(odir, exist_ok=True)
