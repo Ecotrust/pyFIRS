@@ -14,7 +14,10 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - sudo apt-get install --install-recommends winehq-stable
   - wget http://www.cs.unc.edu/~isenburg/lastools/download/LAStools.zip -O lastools.zip
-  - unzip -q lastools.zip -d $HOME
+  - unzip -q lastools.zip -x "LAStools/*toolbox/*" "LAStools/example*/*" "LAStools
+/src/*" "LAStools/data/*" -d $HOME
+  - wget http://forsys.sefs.uw.edu/Software/FUSION/fusionlatest.zip -O fusion.zip
+  - unzip -q fusion.zip -x "APScripts/*" -d $HOME/fusion
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update --quiet conda
