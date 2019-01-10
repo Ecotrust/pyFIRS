@@ -1,14 +1,17 @@
 name: pyFIRS
 channels:
   - conda-forge
-  - defaults
-  - open3d-admin
 dependencies:
-  - python>=3.6
-  - numpy
-  - rasterio
   - geopandas
-  - open3d
-  - pip:
-    - laspy
+  - numpy
+  - pandas
+  - pdal
+  - python-pdal
+  - python>=3.6
+  - rasterio
+  - rasterstats
+  - scikit-image
+  - scikit-learn
+  - shapely
+
 prefix: /Users/daviddiaz/anaconda3/envs/pyFIRS
