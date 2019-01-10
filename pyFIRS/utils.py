@@ -1,11 +1,14 @@
 import os
 import subprocess
 import glob
+import json
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import ParseError
+
 import geopandas as gpd
 import rasterio
 import numpy as np
+from shapely.geometry import Polygon
 
 
 class PipelineError(RuntimeError):
@@ -289,3 +292,40 @@ def move_invalid_tiles(xml_dir, dest_dir):
             num_invalid += 1
     print('Moved files for {} invalid tiles to {}'.format(
         num_invalid, invalid_dir))
+
+
+def get_bbox_as_poly(infile, epsg=None):
+    """Uses PDAL's info tool to extract the bounding box of a file as a
+    shapely Polygon. If an EPSG code is provided, a GeoDataFrame is returned.
+
+    Parameters
+    ----------
+    infile : str, path to file
+        path to input file that PDAL can read
+    epsg : int
+        EPSG code defining the coordinate reference system. Optional.
+
+    Returns
+    -------
+    bbox_poly : Polygon or GeoDataFrame
+        By default (no EPSG is provided), a shapely Polygon with the bounding
+        box as its coordinates is returned. If an EPSG code is specified,
+        bbox_poly is returned as a GeoPandas GeoDataFrame.
+
+    """
+    result = subprocess.run(['pdal', 'info', infile],
+                             stderr = subprocess.PIPE,
+                             stdout = subprocess.PIPE)
+
+    json_result = json.loads(result.stdout.decode())
+
+    coords = json_result['stats']['bbox']['native']['boundary']['coordinates']
+    geometry = Polygon(*coords)
+
+    if epsg:
+        bbox_poly = gpd.GeoDataFrame(geometry=[geometry],
+                                     crs={'init': 'epsg:{}'.format(epsg)})
+    else:
+        bbox_poly = Polygon(*coords)
+
+    return bbox_poly
