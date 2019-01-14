@@ -329,3 +329,21 @@ def get_bbox_as_poly(infile, epsg=None):
         bbox_poly = Polygon(*coords)
 
     return bbox_poly
+
+
+def fname(path):
+    """returns the filename as basename split from extension.
+
+    Parameters
+    -----------
+    path : str, path to file
+        filepath from which filename will be sliced
+
+
+    Returns
+    --------
+    filename : str
+        name of file, split from extension
+    """
+    filename = os.path.basename(path).split('.')[0]
+    return filename
