@@ -1,0 +1,11 @@
+#!/bin/bash
+
+apt-add-repository https://dl.winehq.org/wine-builds/ubuntu/
+wget -nc https://dl.winehq.org/wine-builds/Release.key
+apt-key add Release.key
+apt-get install --install-recommends winehq-stable
+
+wget http://www.cs.unc.edu/~isenburg/lastools/download/LAStools.zip -O lastools.zip
+unzip -q lastools.zip -d $HOME
+wget http://forsys.sefs.uw.edu/Software/FUSION/fusionlatest.zip -O fusion.zip
+unzip -q fusion.zip -x "APScripts/*" -d $HOME
