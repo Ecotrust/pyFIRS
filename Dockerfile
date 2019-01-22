@@ -14,7 +14,8 @@ RUN adduser --disabled-password \
 # Install some linux tools
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    unzip
+    unzip \
+    software-properties-common
 
 # Install wine
 RUN dpkg --add-architecture i386 \
