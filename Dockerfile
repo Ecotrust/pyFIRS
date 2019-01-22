@@ -36,7 +36,7 @@ RUN wget http://www.cs.unc.edu/~isenburg/lastools/download/LAStools.zip \
 # Install FUSION
 RUN wget http://forsys.sefs.uw.edu/Software/FUSION/fusionlatest.zip \
     -O fusion.zip \
-    && unzip -q fusion.zip -x "APScripts/*" -d ${HOME}
+    && unzip -q fusion.zip -x "APScripts/*" -d ${HOME} \
     && rm fusion.zip
 
 
