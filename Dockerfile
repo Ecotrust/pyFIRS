@@ -15,20 +15,22 @@ RUN adduser --disabled-password \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     unzip \
-    software-properties-common
+    software-properties-common \
+    gnupg \
+    apt-transport-https
 
 # Install wine
 RUN dpkg --add-architecture i386 \
-    && apt-add-repository https://dl.winehq.org/wine-builds/ubuntu/ \
-    && wget -nc https://dl.winehq.org/wine-builds/Release.key \
-    && apt-key add Release.key \
-    && apt-get install --install-recommends winehq-stable
+    && apt-add-repository 'deb https://dl.winehq.org/wine-builds/debian/ stretch main' \
+    && wget -nc https://dl.winehq.org/wine-builds/winehq.key \
+    && apt-key add winehq.key \
+    && apt-get update \
+    && apt-get install -y --install-recommends winehq-stable
 
 # Install LAStools
 RUN wget http://www.cs.unc.edu/~isenburg/lastools/download/LAStools.zip \
     -O lastools.zip \
     && unzip -q lastools.zip \
-    # stuff that comes with LAStools that we don't want
     -x "LAStools/*toolbox/*" "LAStools/example*/*" "LAStools/src/*" \
     "LAStools/data/*" \
     -d ${HOME} \
@@ -41,23 +43,20 @@ RUN wget http://forsys.sefs.uw.edu/Software/FUSION/fusionlatest.zip \
     && rm fusion.zip
 
 
-# Make sure the contents of our repo are in ${HOME}
+# Get the contents of our repo added to ${HOME}
 COPY . ${HOME}
-USER root
-RUN chown -R ${NB_UID} ${HOME}
-USER ${NB_USER}
-
-
-# Set up our conda environment
-COPY environment.yml /tmp/environment.yml
 
 RUN conda config --add channels conda-forge \
-    && conda env create -n pyFIRS -f /tmp/environment.yml \
+    && conda env create -n pyFIRS -f ${HOME}/environment.yml
 
 RUN echo "source activate pyFIRS" > ~/.bashrc
 ENV PATH /opt/conda/envs/pyFIRS/bin:$PATH
 
 # install pyFIRS
-RUN python setup.py develop
+RUN pip install -e ${HOME}
 
 RUN pip install --no-cache-dir notebook==5.*
+
+USER root
+RUN chown -R ${NB_UID} ${HOME}
+USER ${NB_USER}
