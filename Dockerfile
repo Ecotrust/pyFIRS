@@ -47,13 +47,14 @@ RUN wget http://forsys.sefs.uw.edu/Software/FUSION/fusionlatest.zip \
 COPY . ${HOME}
 
 RUN conda config --add channels conda-forge \
-    && conda env create -n pyFIRS -f ${HOME}/environment.yml
+    && conda env create -n pyFIRS -f ${HOME}/environment.yml \
+    && rm -rf /opt/conda/pkgs/*
 
 RUN echo "source activate pyFIRS" > ~/.bashrc
 ENV PATH /opt/conda/envs/pyFIRS/bin:$PATH
 
 # install pyFIRS
-RUN pip install -e ${HOME}
+RUN pip install --no-cache-dir -e ${HOME}
 
 RUN pip install --no-cache-dir notebook==5.*
 
