@@ -347,3 +347,32 @@ def fname(path):
     """
     filename = os.path.basename(path).split('.')[0]
     return filename
+
+
+def annulus(inner_radius, outer_radius, dtype=np.uint8):
+    """Generates a flat, donut-shaped (annular) structuring element.
+
+    A pixel is within the neighborhood if the euclidean distance between
+    it and the origin falls between the inner and outer radii (inclusive).
+
+    Parameters
+    ----------
+    inner_radius : int
+        The inner radius of the annular structuring element
+    outer_radius : int
+        The outer radius of the annular structuring element
+    dtype : data-type
+        The data type of the structuring element
+
+    Returns
+    -------
+    selem : ndarray
+        The structuring element where elements of the neighborhood are 1
+        and 0 otherwise
+    """
+    L = np.arange(-outer_radius, outer_radius + 1)
+    X, Y = np.meshgrid(L, L)
+    selem = np.array(((X ** 2 + Y ** 2) <= outer_radius ** 2) *
+                     ((X ** 2 + Y ** 2) >= inner_radius ** 2),
+                    dtype=dtype)
+    return selem
