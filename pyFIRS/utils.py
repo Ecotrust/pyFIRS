@@ -376,3 +376,80 @@ def annulus(inner_radius, outer_radius, dtype=np.uint8):
                      ((X ** 2 + Y ** 2) >= inner_radius ** 2),
                     dtype=dtype)
     return selem
+
+
+def inspect_failures(failed_dir):
+    """Prints error messages reported for tiles that failed in the lidar
+    processing pipeline.
+
+    Parameters
+    ----------
+    failed_dir : string, path to directory
+         path to directory containing text files indicating any tiles which
+         failed processing
+    """
+    failed = glob.glob(os.path.join(failed_dir, '*.txt'))
+
+    for filename in failed:
+        with open(filename) as f:
+            print([line for line in f.readlines() if line.rstrip() != ''])
+        print('----------------------')
+
+
+def processing_summary(all_tiles, already_finished, processing_tiles, finished_dir, failed_dir):
+    """Prints a summary indicating progress of a lidar processing pipeline.
+
+    Parameters
+    ----------
+    all_tiles : list-like
+        all tiles within a lidar acquisition
+    already_finished : list-like
+        tiles which were successfully processed in a previous execution of the
+        processing pipeline
+    processing_tiles : list-like
+        tiles which are being processed during the currently executing pipeline
+    finished_dir : string, path to directory
+        path to directory containing text files indicating any tiles which have
+        finished processing
+    failed_dir : string, path to directory
+        path to directory containing text files indicating any tiles which
+        failed processing
+    """
+
+    failed = glob.glob(os.path.join(failed_dir, '*.txt'))
+    finished = glob.glob(os.path.join(finished_dir, '*.txt'))
+
+    summary = '''
+    Processing Summary
+    -------------------
+    {:>5,d} tiles in acquisition
+    {:>5,d} tiles previously finished in acquisition
+
+    {:>5,d} tiles being processed in this run
+    {:>5,d} tiles from this run finished
+
+    {:>5,d} tiles failed
+    '''.format(len(all_tiles),
+               len(already_finished),
+               len(processing_tiles),
+               len(finished) - (len(all_tiles) - len(processing_tiles)),
+               len(failed))
+
+    total_percent_unfinished = int(70 * (1-len(finished)/len(all_tiles)))
+    total_percent_finished = int(70 * len(finished)/len(all_tiles))
+    total_percent_failed = int(70 * len(failed)/len(all_tiles))
+
+    this_run_unfinished = int(70 - 70*(len(finished) - (len(all_tiles) - \
+    len(processing_tiles))) / len(processing_tiles))
+    this_run_finished = int(70*(len(finished) - (len(all_tiles) - \
+    len(processing_tiles))) / len(processing_tiles))
+
+    progress_bars = '|' + '=' * this_run_finished + ' '* this_run_unfinished +\
+     '!' * total_percent_failed + '|  {:.1%} this run\n'.format((len(finished)\
+      - (len(all_tiles) - len(processing_tiles))) / len(processing_tiles)) + \
+    '|' + '=' * total_percent_finished + ' ' * total_percent_unfinished + '!' \
+    * total_percent_failed + '|  {:.1%} total'.format(len(finished) / \
+    len(all_tiles))
+
+    print(summary)
+    print(progress_bars)
