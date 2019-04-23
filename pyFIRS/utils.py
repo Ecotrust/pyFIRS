@@ -149,7 +149,7 @@ def clip_tile_from_shp(in_raster, in_shp, odir, buffer=0):
     return proc_clip
 
 
-def convert_project(infile, to_fmt, crs):
+def convert_project(infile, outfile, crs):
     '''Converts a raster to another format and specifies its projection.
 
     Uses rasterio command line tool executed using subprocess. The file
@@ -160,8 +160,8 @@ def convert_project(infile, to_fmt, crs):
     ----------
     infile: string, path to file
         input raster to be converted
-    to_fmt: string
-        extension indicating file format to convert to (e.g., '.tif')
+    outfile: string, path to file
+        output raster to be generated
     crs: string
         specification of coordinate reference system to use following rasterio
         command line tool (RIO) formatting (e.g., 'EPSG:3857')
@@ -173,10 +173,6 @@ def convert_project(infile, to_fmt, crs):
     proc_project: CompletedProcess
         result of executing subprocess.run using rio edit-info
     '''
-    outdir, basename = os.path.split(infile)
-    fname = basename.split('.')[0]
-    outfile = os.path.join(outdir, fname + to_fmt)
-
     # convert the file to the new format
     proc_convert = subprocess.run(['rio', 'convert', infile, outfile],
                                   stderr=subprocess.PIPE,
