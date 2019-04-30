@@ -480,3 +480,4 @@ def time_to_complete(start_time, num_jobs, jobs_completed):
     print('''elapsed: \t{}
 est. time left: {}
     '''.format(time.strftime('%-Hh %Mm %Ss', time.gmtime(elapsed)),
+               time.strftime('%-Hh %Mm %Ss', time.gmtime(time_left))))
