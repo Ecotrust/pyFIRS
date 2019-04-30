@@ -1,7 +1,8 @@
-import os
-import subprocess
 import glob
 import json
+import os
+import subprocess
+import time
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import ParseError
 
@@ -392,7 +393,8 @@ def inspect_failures(failed_dir):
         print('----------------------')
 
 
-def processing_summary(all_tiles, already_finished, processing_tiles, finished_dir, failed_dir):
+def processing_summary(all_tiles, already_finished, processing_tiles,
+                       finished_dir, failed_dir, start_time):
     """Prints a summary indicating progress of a lidar processing pipeline.
 
     Parameters
@@ -410,6 +412,8 @@ def processing_summary(all_tiles, already_finished, processing_tiles, finished_d
     failed_dir : string, path to directory
         path to directory containing text files indicating any tiles which
         failed processing
+    start_time : float
+        time the pipeline execution began, produced by time.time()
     """
 
     failed = glob.glob(os.path.join(failed_dir, '*.txt'))
@@ -449,3 +453,30 @@ def processing_summary(all_tiles, already_finished, processing_tiles, finished_d
 
     print(summary)
     print(progress_bars)
+
+    time_to_complete(start_time,
+                     processing_tiles,
+                     len(finished) - (len(all_tiles) - len(processing_tiles)))
+
+def time_to_complete(start_time, num_jobs, jobs_completed):
+    """Prints elapsed time and estimated time of completion.
+
+    Parameters
+    ----------
+    start_time : float
+        time the pipeline execution began, produced by time.time()
+    num_jobs : int
+        total number of jobs to be completed
+    jobs_completed : int
+        number of jobs completed so far
+    """
+    time_now = time.time()
+    elapsed = time_now - start_time
+
+    prop_complete = jobs_completed / num_jobs
+    est_completion = elapsed / prop_complete
+    time_left = est_completion - elapsed
+
+    print('''elapsed: \t{}
+est. time left: {}
+    '''.format(time.strftime('%-Hh %Mm %Ss', time.gmtime(elapsed)),
