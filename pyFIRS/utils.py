@@ -455,7 +455,7 @@ def processing_summary(all_tiles, already_finished, processing_tiles,
     print(progress_bars)
 
     time_to_complete(start_time,
-                     processing_tiles,
+                     len(processing_tiles),
                      len(finished) - (len(all_tiles) - len(processing_tiles)))
 
 def time_to_complete(start_time, num_jobs, jobs_completed):
