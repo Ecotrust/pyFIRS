@@ -311,8 +311,8 @@ def get_bbox_as_poly(infile, epsg=None):
 
     """
     result = subprocess.run(['pdal', 'info', infile],
-                             stderr = subprocess.PIPE,
-                             stdout = subprocess.PIPE)
+                            stderr=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
 
     json_result = json.loads(result.stdout.decode())
 
@@ -320,8 +320,8 @@ def get_bbox_as_poly(infile, epsg=None):
     geometry = Polygon(*coords)
 
     if epsg:
-        bbox_poly = gpd.GeoDataFrame(geometry=[geometry],
-                                     crs={'init': 'epsg:{}'.format(epsg)})
+        bbox_poly = gpd.GeoDataFrame(
+            geometry=[geometry], crs={'init': 'epsg:{}'.format(epsg)})
     else:
         bbox_poly = Polygon(*coords)
 
@@ -369,9 +369,10 @@ def annulus(inner_radius, outer_radius, dtype=np.uint8):
     """
     L = np.arange(-outer_radius, outer_radius + 1)
     X, Y = np.meshgrid(L, L)
-    selem = np.array(((X ** 2 + Y ** 2) <= outer_radius ** 2) *
-                     ((X ** 2 + Y ** 2) >= inner_radius ** 2),
-                    dtype=dtype)
+    selem = np.array(
+        ((X**2 + Y**2) <= outer_radius**2) * (
+            (X**2 + Y**2) >= inner_radius**2),
+        dtype=dtype)
     return selem
 
 
@@ -429,15 +430,13 @@ def processing_summary(all_tiles, already_finished, processing_tiles,
     {:>5,d} tiles from this run finished
 
     {:>5,d} tiles failed
-    '''.format(len(all_tiles),
-               len(already_finished),
-               len(processing_tiles),
-               len(finished) - (len(all_tiles) - len(processing_tiles)),
-               len(failed))
+    '''.format(
+        len(all_tiles), len(already_finished), len(processing_tiles),
+        len(finished) - (len(all_tiles) - len(processing_tiles)), len(failed))
 
-    total_percent_unfinished = int(70 * (1-len(finished)/len(all_tiles)))
-    total_percent_finished = int(70 * len(finished)/len(all_tiles))
-    total_percent_failed = int(70 * len(failed)/len(all_tiles))
+    total_percent_unfinished = int(70 * (1 - len(finished) / len(all_tiles)))
+    total_percent_finished = int(70 * len(finished) / len(all_tiles))
+    total_percent_failed = int(70 * len(failed) / len(all_tiles))
 
     this_run_unfinished = int(70 - 70*(len(finished) - (len(all_tiles) - \
     len(processing_tiles))) / len(processing_tiles))
@@ -454,9 +453,9 @@ def processing_summary(all_tiles, already_finished, processing_tiles,
     print(summary)
     print(progress_bars)
 
-    time_to_complete(start_time,
-                     len(processing_tiles),
+    time_to_complete(start_time, len(processing_tiles),
                      len(finished) - (len(all_tiles) - len(processing_tiles)))
+
 
 def time_to_complete(start_time, num_jobs, jobs_completed):
     """Prints elapsed time and estimated time of completion.
@@ -470,14 +469,16 @@ def time_to_complete(start_time, num_jobs, jobs_completed):
     jobs_completed : int
         number of jobs completed so far
     """
-    time_now = time.time()
-    elapsed = time_now - start_time
+    if jobs_completed == 0:
+        print('No jobs completed yet.')
+    else:
+        time_now = time.time()
+        elapsed = time_now - start_time
 
-    prop_complete = jobs_completed / num_jobs
-    est_completion = elapsed / prop_complete
-    time_left = est_completion - elapsed
+        prop_complete = jobs_completed / num_jobs
+        est_completion = elapsed / prop_complete
+        time_left = est_completion - elapsed
 
-    print('''elapsed: \t{}
-est. time left: {}
-    '''.format(time.strftime('%-Hh %Mm %Ss', time.gmtime(elapsed)),
-               time.strftime('%-Hh %Mm %Ss', time.gmtime(time_left))))
+        print('''elapsed: \t{}\nest. time left: {}'''.format(
+            time.strftime('%-Hh %Mm %Ss', time.gmtime(elapsed)),
+            time.strftime('%-Hh %Mm %Ss', time.gmtime(time_left))))
