@@ -457,6 +457,30 @@ def processing_summary(all_tiles, already_finished, processing_tiles,
                      len(finished) - (len(all_tiles) - len(processing_tiles)))
 
 
+def print_dhms(s):
+    """Prints number of days, hours, minutes, and seconds
+    represented by number of seconds provided as input.
+
+    Parameters
+    ----------
+    s : numeric
+        seconds
+    """
+    days = s // (24 * 3600)
+    s = s % (24 * 3600)
+    hours = s // 3600
+    s %= 3600
+    minutes = s // 60
+    s %= 60
+    seconds = s
+    if days > 0:
+        print(f'{days:2.0f}d {hours:2.0f}h {minutes:2.0f}m {seconds:2.0f}s')
+    elif hours > 0:
+        print(f'    {hours:2.0f}h {minutes:2.0f}m {seconds:2.0f}s')
+    else:
+        print(f'        {minutes:2.0f}m {seconds:2.0f}s')
+
+
 def time_to_complete(start_time, num_jobs, jobs_completed):
     """Prints elapsed time and estimated time of completion.
 
@@ -470,7 +494,7 @@ def time_to_complete(start_time, num_jobs, jobs_completed):
         number of jobs completed so far
     """
     if jobs_completed == 0:
-        print('No jobs completed yet.')
+        print('\nNo jobs completed yet.')
     else:
         time_now = time.time()
         elapsed = time_now - start_time
@@ -479,6 +503,7 @@ def time_to_complete(start_time, num_jobs, jobs_completed):
         est_completion = elapsed / prop_complete
         time_left = est_completion - elapsed
 
-        print('''elapsed: \t{}\nest. time left: {}'''.format(
-            time.strftime('%-Hh %Mm %Ss', time.gmtime(elapsed)),
-            time.strftime('%-Hh %Mm %Ss', time.gmtime(time_left))))
+        print('\nelapsed: ', end='\t')
+        print_dhms(elapsed)
+        print('remaining: ', end='\t')
+        print_dhms(time_left)
