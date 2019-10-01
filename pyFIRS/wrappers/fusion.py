@@ -3679,5 +3679,5 @@ class useFUSION(object):
             data products.
         """
         cmd = 'treeseg'
-        params = [hm, ht_threshold, outputfile]
+        params = [chm, ht_threshold, outputfile]
         self.run(cmd, *params, **kwargs)
