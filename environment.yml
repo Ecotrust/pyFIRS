@@ -4,14 +4,18 @@ channels:
 dependencies:
   - dask
   - geopandas
+  - graphviz
   - matplotlib
   - pdal
   - python-pdal
   - python>=3.6
   - rasterio
   - rasterstats
+  - scikit-image
+  - scikit-learn
+  - seaborn
   - shapely
   - wget
-  - xlrd
+
 
 prefix: /Users/daviddiaz/anaconda3/envs/pyFIRS
