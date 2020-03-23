@@ -5,6 +5,8 @@ dependencies:
   - dask
   - geopandas
   - graphviz
+  - ipywidgets
+  - jupyterlab
   - matplotlib
   - pdal
   - python-pdal
@@ -15,7 +17,5 @@ dependencies:
   - scikit-learn
   - seaborn
   - shapely
-  - wget
-
 
 prefix: /Users/daviddiaz/anaconda3/envs/pyFIRS
