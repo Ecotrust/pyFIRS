@@ -4,7 +4,13 @@ channels:
 dependencies:
   - dask
   - geopandas
+<<<<<<< HEAD
   - python-graphviz
+=======
+  - graphviz
+  - ipywidgets
+  - jupyterlab
+>>>>>>> ccad17ed483ce9db5e3f2e1421f4db6dee24f932
   - matplotlib
   - pdal
   - python-pdal
