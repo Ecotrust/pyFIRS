@@ -507,3 +507,102 @@ def time_to_complete(start_time, num_jobs, jobs_completed):
         print_dhms(elapsed)
         print('remaining: ', end='\t')
         print_dhms(time_left)
+
+
+def make_buffered_fishnet(xmin, ymin, xmax, ymax, crs, spacing=1000,
+                          buffer=50):
+    """Makes a GeoDataFrame with a fishnet grid that has overlapping edges.
+
+    Converts an existing lidar tiling scheme into one that has overlapping
+    tiles and which is aligned with a grid based on the spacing parameter.
+
+    Parameters
+    ----------
+    xmin, ymin, xmax, ymax : numeric
+      Values indicating the extent of the existing lidar data.
+    crs : Coordinate Reference System
+      Must be readable by GeoPandas to create a GeoDataFrame.
+    spacing : int
+      Length and width of tiles in new tiling scheme prior to buffering
+    buffer : int
+      Amount of overlap between neighboring tiles.
+    """
+    xmin, ymin = (
+        np.floor(np.array([xmin, ymin]) // spacing) * spacing).astype(int)
+    xmax, ymax = (
+        np.ceil(np.array([xmax, ymax]) // spacing) * spacing).astype(int)
+
+    xx, yy = np.meshgrid(
+        np.arange(xmin, xmax + spacing, spacing),
+        np.arange(ymin, ymax + spacing, spacing))
+
+    xx_leftbuff = xx[:, :-1] - buffer
+    xx_rightbuff = xx[:, 1:] + buffer
+    yy_downbuff = yy[:-1, :] - buffer
+    yy_upbuff = yy[1:, :] + buffer
+
+    ll = np.stack((
+        xx_leftbuff[1:, :].ravel(),  # skip top row
+        yy_downbuff[:, :-1].ravel())).T  # skip right-most column
+
+    ul = np.stack((
+        xx_leftbuff[:-1, :].ravel(),  # skip bottom row
+        yy_upbuff[:, :-1].ravel())).T  # skip right-most column
+
+    ur = np.stack((
+        xx_rightbuff[:-1, :].ravel(),  # skip bottom row
+        yy_upbuff[:, 1:].ravel())).T  # skip left-most column
+
+    lr = np.stack((
+        xx_rightbuff[1:, :].ravel(),  # skip top row
+        yy_downbuff[:, 1:].ravel())).T  # skip left-most column
+
+    buff_fishnet = np.stack([ll, ul, ur, lr])
+
+    polys = [
+        Polygon(buff_fishnet[:, i, :]) for i in range(buff_fishnet.shape[1])
+    ]
+    ll_names = [x for x in (ll + buffer).astype(int).astype(str)]
+    tile_ids = [
+        '_'.join(tile) + '_{}'.format(str(spacing)) for tile in ll_names
+    ]
+
+    buff_fishnet_gdf = gpd.GeoDataFrame(geometry=polys, crs=crs)
+    buff_fishnet_gdf['tile_id'] = tile_ids
+
+    return buff_fishnet_gdf.set_index('tile_id')
+
+
+def get_intersecting_tiles(src_tiles, new_tiles):
+    """Identifies tiles from src that intersect tiles in new_tiles.
+
+    This function is intended to identify the files which should be read for
+    retiling a lidar acquisition into the new_tiles layout.
+
+    src_tiles is expected to have a 'file_name' field.
+
+    Parameters
+    ----------
+    src_tiles : GeoDataFrame
+      Original tiling scheme for lidar acquisition
+    new_tiles : GeoDataFrame
+      New tiling scheme for lidar acquisition, such as one created by the
+      make_buffered_fishnet function
+
+    Returns
+    -------
+    joined_tiles : GeoDataFrame
+      Each row shows a tile from new_tiles that intersected with one or more
+      tiles from src_tiles. The list of tiles from src_tiles that intersect
+      each tile in new_tiles are formatted as a space-delimited string.
+    """
+    joined = gpd.sjoin(new_tiles, src_tiles)
+    joined_tiles = joined.groupby(level=0)['file_name'].apply(list).apply(
+        ' '.join).to_frame()
+    joined_tiles.index.name = 'tile_id'
+    joined_tiles = joined_tiles.rename({
+        'file_name': 'intersecting_files'
+    },
+                                       axis=1)
+
+    return joined_tiles
