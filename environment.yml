@@ -4,14 +4,12 @@ channels:
 dependencies:
   - dask
   - geopandas
-<<<<<<< HEAD
-  - python-graphviz
-=======
   - graphviz
   - ipywidgets
   - jupyterlab
->>>>>>> ccad17ed483ce9db5e3f2e1421f4db6dee24f932
+  - jupyter
   - matplotlib
+  - nb_conda_kernels
   - pdal
   - python-pdal
   - python>=3.6
@@ -21,5 +19,7 @@ dependencies:
   - scikit-learn
   - seaborn
   - shapely
+  pip:
+    - graphviz
 
 prefix: /Users/daviddiaz/anaconda3/envs/pyFIRS
