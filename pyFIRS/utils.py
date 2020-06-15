@@ -530,7 +530,7 @@ def make_buffered_fishnet(xmin, ymin, xmax, ymax, crs, spacing=1000,
     xmin, ymin = (
         np.floor(np.array([xmin, ymin]) // spacing) * spacing).astype(int)
     xmax, ymax = (
-        np.ceil(np.array([xmax, ymax]) // spacing) * spacing).astype(int)
+        np.ceil(np.array([xmax, ymax]) // spacing) * spacing).astype(int) + spacing
 
     xx, yy = np.meshgrid(
         np.arange(xmin, xmax + spacing, spacing),
@@ -606,3 +606,32 @@ def get_intersecting_tiles(src_tiles, new_tiles):
                                        axis=1)
 
     return joined_tiles
+
+
+def parse_coords_from_tileid(tile_id):
+    """Get the coordinates of the lower left corner of the tile, assuming the
+    tile has been named in the pattern {XMIN}_{YMIN}_{LENGTH}.
+
+    Parameters
+    ----------
+    tile_id : string
+        assumed tile_id follows the naming convention of {LLX}_{LLY}_{LENGTH}
+        where:
+          LLX = x-coordinate of lower-left corner of tile (in projected units)
+          LLY = y-coordinate of lower-left corner of tile (in projected units)
+          LENGTH = length of the raster (in projected units), assumed to be a
+          square tile shape
+
+    Returns
+    -------
+    llx, lly, length : int
+        x- and y- coordinates of lower-left corner and length of raster
+    """
+    tile_parts = tile_id.split('_')
+    if len(tile_parts) == 2:
+        llx, lly = [int(coord) for coord in tile_parts]
+        length = 1000 # assumed tile width if not explicit in tile_id
+    elif len(tile_parts) == 3:
+        llx, lly, length = [int(coord) for coord in tile_parts]
+
+    return llx, lly, length
